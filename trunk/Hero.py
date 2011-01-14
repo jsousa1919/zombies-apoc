@@ -20,7 +20,7 @@ class Hero(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.screen = pygame.display.get_surface()
 
-		self.master_image = pygame.image.load(os.path.join("data","male_unarmored.png"))
+		self.master_image = pygame.image.load(os.path.join("data","male_unarmored.png")).convert_alpha()
 
 		self.idle_sprites = self.__load_idle_sprites__()
 		self.walk_sprites = self.__load_walk_sprites__()
