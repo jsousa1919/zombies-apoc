@@ -8,7 +8,7 @@ WINDOW_WIDTH = 1000
 FPS = 24
 
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-background = pygame.image.load(os.path.join("data","flagstone2.jpg"))
+background = pygame.image.load(os.path.join("data","flagstone2.jpg")).convert()
 window.blit(background, (0,0))
 pygame.display.flip()
 pygame.display.set_caption('ZOMBIE')

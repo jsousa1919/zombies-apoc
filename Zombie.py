@@ -107,8 +107,8 @@ class Zombie(pygame.sprite.Sprite):
 			if self.frame >= len(self.walk_sprites[self.direction]): self.frame = 0
 			self.image = self.walk_sprites[self.direction][self.frame]
 
-			x = self.speed*math.cos(self.angle)
-			y = self.speed*math.sin(self.angle)
+			x = self.speed*math.cos(math.radians(self.angle))
+			y = self.speed*math.sin(math.radians(self.angle))
 			self.rect.centerx += x
 			self.rect.centery -= y
 		else:
@@ -123,11 +123,7 @@ class Zombie(pygame.sprite.Sprite):
 			self.direction = dirindex
         
 	def set_angle(self, theta):
-		ang = theta
-		while ang >= 360:
-			ang -= 360
-		while ang < 0:
-			ang += 360
+		ang = theta % 360
 	    
 		if ang >= 338 or ang < 23:
 			self.face(RIGHT)
