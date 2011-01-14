@@ -14,14 +14,14 @@ MAXENDUR = 10
 MINSIGHT = 200
 MAXSIGHT = 2000
 
-LEFT = 0
-UPLEFT = 1
-UP = 2
-UPRIGHT = 3
-RIGHT = 4
-DOWNRIGHT = 5
-DOWN = 6
-DOWNLEFT = 7
+LEFT = 1
+UPLEFT = 2
+UP = 3
+UPRIGHT = 4
+RIGHT = 5
+DOWNRIGHT = 6
+DOWN = 7
+DOWNLEFT = 0
 
 class Zombie(pygame.sprite.Sprite):
 	def __init__(self, herogroup):
@@ -31,7 +31,7 @@ class Zombie(pygame.sprite.Sprite):
 		self.fov_image = pygame.Surface((400,400))
 		pygame.draw.polygon(self.fov_image, pygame.Color('0xFF000040'), [(200, 200), (400, 100), (400, 300)])
 
-		self.master_image = pygame.image.load(os.path.join("data","zombie_0.png")).convert_alpha()
+		self.master_image = pygame.image.load(os.path.join("data","zombie_1.png")).convert_alpha()
 
 		self.idle_sprites = self.__load_idle_sprites__()
 		self.walk_sprites = self.__load_walk_sprites__()
@@ -47,6 +47,7 @@ class Zombie(pygame.sprite.Sprite):
 		self.MOVE = False
 
 		self.rect = self.idle_sprites[0][0].get_rect()
+
 		self.frame = 0
 
 		self.area = self.screen.get_rect()
@@ -110,6 +111,8 @@ class Zombie(pygame.sprite.Sprite):
 	
 	def update(self):
 		self.tick += 1
+		self.look_for_food()
+		
 		if self.tick % int(MAXSPEED / self.speed) == 0: 
 			self.frame += 1
 
@@ -138,6 +141,7 @@ class Zombie(pygame.sprite.Sprite):
 			y = self.speed*math.sin(math.radians(self.angle))
 			self.rect.centerx += x
 			self.rect.centery -= y
+
 		else:
 			if self.frame >= len(self.idle_sprites[self.direction]): self.frame = 0
 			im = self.idle_sprites[self.direction][self.frame]
@@ -149,7 +153,8 @@ class Zombie(pygame.sprite.Sprite):
 			self.direction = dirindex
 		
 	def set_angle(self, theta):
-		ang = theta % 360
+		ang = int(theta % 360)
+		self.angle = ang
 
 		if ang >= 338 or ang < 23:
 			self.face(RIGHT)

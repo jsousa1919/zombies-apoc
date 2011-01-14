@@ -17,8 +17,12 @@ zombies = pygame.sprite.RenderUpdates()
 hero = Hero.Hero()
 heroes = pygame.sprite.RenderUpdates()
 
+#for i in xrange(0,1):
+heroes.add(hero)
+
 for i in xrange(0,1):
-	heroes.add(hero)
+	zom = Zombie.Zombie(heroes)
+	zombies.add(zom)
 
 for i in xrange(0,6):
 	zombies.add(Zombie.Zombie(heroes))
