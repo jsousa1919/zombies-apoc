@@ -4,7 +4,7 @@ from pygame.locals import *
 FPS = 24
 
 pygame.init()
-window = pygame.display.set_mode((media.WINDOW_WIDTH, media.WINDOW_HEIGHT))
+window = pygame.display.set_mode((media.WINDOW_WIDTH, media.WINDOW_HEIGHT), pygame.DOUBLEBUF)
 pygame.mixer.init(11025)
 media.prepare()
 
@@ -22,12 +22,13 @@ for i in xrange(0,6):
 	zombies.add(Zombie.Zombie(heroes))
 
 def update():
+	zombies.clear(window, media.BACKGROUND)
+	heroes.clear(window, media.BACKGROUND)
 	zombies.update()
 	heroes.update()
 	rectlist = zombies.draw(window) + heroes.draw(window)
 	pygame.display.update(rectlist)
-	zombies.clear(window, media.BACKGROUND)
-	heroes.clear(window, media.BACKGROUND)
+	pygame.display.flip()
 
 clock = pygame.time.Clock()
 quit = False
@@ -60,7 +61,10 @@ while not quit:
 	elif keyspressed[K_w]:
 		for hero in heroes:
 			hero.move(Hero.UP)
-	for event in pygame.event.get(): 
+	events = pygame.event.get([KEYDOWN, KEYUP, QUIT])
+	#if events == [] and pygame.event.poll().type != NOEVENT:
+	#	pygame.event.clear()
+	for event in events: 
 		if event.type == QUIT: 
 			quit = True
 		elif event.type == KEYDOWN and event.key == K_LSHIFT:

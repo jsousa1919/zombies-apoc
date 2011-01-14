@@ -71,7 +71,7 @@ class Zombie(pygame.sprite.Sprite):
 			self.frame += 1			
 
 		#create field of view mask
-		fov_image = pygame.transform.rotate(media.ZOM_FOV, self.angle)
+		fov_image = media.ZOM_FOV[int(self.angle / media.ZOM_FOV_DEV)]
 		fov_image.set_colorkey(pygame.Color('black'))
 		fov_rect = fov_image.get_rect(center=self.rect.center)
 		fov_mask = pygame.mask.from_surface(fov_image)
@@ -121,8 +121,6 @@ class Zombie(pygame.sprite.Sprite):
 		if self.MOVE:
 			if self.frame >= len(media.ZOM_SPRITE_WALK[self.direction]): self.frame = 0
 			im = media.ZOM_SPRITE_WALK[self.direction][self.frame]
-			#self.image.blit(im, map(operator.sub, self.image.get_rect().center, im.get_rect().center)) # for viewing FOV
-			self.image = im																				# for invisible FOV
 
 			x = self.speed*math.cos(math.radians(self.angle))
 			y = self.speed*math.sin(math.radians(self.angle))
@@ -132,8 +130,9 @@ class Zombie(pygame.sprite.Sprite):
 		else:
 			if self.frame >= len(media.ZOM_SPRITE_IDLE[self.direction]): self.frame = 0
 			im = media.ZOM_SPRITE_IDLE[self.direction][self.frame]
-			#self.image.blit(im, map(operator.sub, self.image.get_rect().center, im.get_rect().center))	# for viewing FOV
-			self.image = im																				# for invisible FOV
+		
+		#self.image.blit(im, map(operator.sub, self.image.get_rect().center, im.get_rect().center))	# for viewing FOV
+		self.image = im																				# for invisible FOV
 
 #actions
 	def speak(self):
