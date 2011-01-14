@@ -14,6 +14,10 @@ MAXENDUR = 10
 MINSIGHT = 200
 MAXSIGHT = 2000
 
+ST_IDLE = 0
+ST_SEARCHING = 1
+ST_ATTACKING = 2
+
 LEFT = 1
 UPLEFT = 2
 UP = 3
@@ -37,12 +41,17 @@ class Zombie(pygame.sprite.Sprite):
 		self.walk_sprites = self.__load_walk_sprites__()
 
 		self.heroes = herogroup
+		self.hero_focus = None
+		self.state = ST_IDLE
+		self.lt = 0
 
 		self.angle = 0
 
 		self.tick = 0
 		self.direction = 0
 
+		self.focus = 4
+		self.endurance = 4
 		self.speaking = False
 		self.MOVE = False
 
@@ -58,6 +67,7 @@ class Zombie(pygame.sprite.Sprite):
 		y = random.random() * WINDOW_HEIGHT
 
 		self.rect.topleft = x, y
+		self.lkl = x, y
 
 		self.update()
 
@@ -111,12 +121,11 @@ class Zombie(pygame.sprite.Sprite):
 	
 	def update(self):
 		self.tick += 1
-		self.look_for_food()
 		
 		if self.tick % int(MAXSPEED / self.speed) == 0: 
 			self.frame += 1
 
-		self.look_for_food()
+		#self.goto_lkl()
 		self.image = pygame.transform.rotate(self.fov_image, self.angle)
 		self.rect = self.image.get_rect(center=self.rect.center)
 		self.image.set_colorkey(pygame.Color('black'))
@@ -130,12 +139,35 @@ class Zombie(pygame.sprite.Sprite):
 			diff = map(operator.add, world_diff, local_diff)
 			if fov.overlap(hero_mask, diff):
 				#start hero sighted
-				self.speak() 
+				#self.speak() 
+				self.hero_focus = hero
+				self.lkl = hero_center
+				self.lt = self.tick
+				self.state = ST_ATTACKING
+				self.speed = MIDSPEED
+
+		if self.state > ST_IDLE and self.tick - self.lt > self.endurance * 100:
+			self.stop()
+			self.speed = MINSPEED
+			self.state = ST_IDLE
+
+		if self.state == ST_IDLE:
+			if self.tick % (self.focus * 1000) == 0:
+				print "change"
+				self.lkl = self.lkl[0] + ((random.random() - 0.5) * 3000), self.lkl[1] + ((random.random() - 0.5) * 3000)
+			self.goto_lkl(MAXSPEED,50)
+			if self.MOVE == False:
+				self.add_to_angle(self.focus * (random.random() - 0.5) * 20)
+
+		if self.state > ST_IDLE:
+			self.goto_lkl()
 
 		if self.MOVE:
 			if self.frame >= len(self.walk_sprites[self.direction]): self.frame = 0
 			im = self.walk_sprites[self.direction][self.frame]
-			self.image.blit(im, map(operator.sub, self.image.get_rect().center, im.get_rect().center))
+			#self.image.blit(im, map(operator.sub, self.image.get_rect().center, im.get_rect().center))
+			self.image = im
+			self.rect = im.get_rect(center=self.rect.center)
 
 			x = self.speed*math.cos(math.radians(self.angle))
 			y = self.speed*math.sin(math.radians(self.angle))
@@ -145,11 +177,13 @@ class Zombie(pygame.sprite.Sprite):
 		else:
 			if self.frame >= len(self.idle_sprites[self.direction]): self.frame = 0
 			im = self.idle_sprites[self.direction][self.frame]
-			self.image.blit(im, map(operator.sub, self.image.get_rect().center, im.get_rect().center))
+			#self.image.blit(im, map(operator.sub, self.image.get_rect().center, im.get_rect().center))
+			self.image = im
+			self.rect = im.get_rect(center=self.rect.center)
 		
 	def face(self, dirindex):
 		if self.direction != dirindex: 
-			self.speak()
+			#self.speak()
 			self.direction = dirindex
 		
 	def set_angle(self, theta):
@@ -183,17 +217,18 @@ class Zombie(pygame.sprite.Sprite):
 	def stop(self):
 		self.MOVE = False
 
-	def look_for_food(self):
-		for hero in self.heroes:
-			x = hero.rect.centerx
-			y = hero.rect.centery
+	def goto_lkl(self, nogo = 65, rr = 20):
+		x, y = self.lkl
+		x += ((random.random() - 0.5) * rr)
+		y += ((random.random() - 0.5) * rr)
+		dist = math.hypot(y - self.rect.centery, x - self.rect.centerx)
+		self.lkl = x, y
 
-			dist = math.hypot(y - self.rect.centery, x - self.rect.centerx)
+		if dist <= nogo:
+			self.stop()
+		else:
+			self.move()
 			ang = math.degrees(math.atan2((self.rect.centery - y),(x - self.rect.centerx)))
-
 			self.set_angle(ang)
-			
-			if dist <= 65:
-				self.stop()
-			else:
-				self.move()
+		
+		
