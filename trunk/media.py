@@ -20,8 +20,9 @@ ZOM_SPRITE_HEIGHT = 128
 ZOM_SPRITE_MAIN = None
 ZOM_SPRITE_IDLE = None
 ZOM_SPRITE_WALK = None
-ZOM_FOV = []
+ZOM_FOV = [[], []]
 ZOM_FOV_DEV = 4
+ZOM_FOV_MIN = 200
 
 #HERO
 HERO_SPRITE_WIDTH = 256
@@ -41,6 +42,15 @@ def load_sprite_matrix(main, xmin, xmax, ymin, ymax, w, h):
 	return sprites
 
 
+def request_fov(x):
+	if len(ZOM_FOV) > x > 0 and ZOM_FOV[x] != []:
+		return
+	while len(ZOM_FOV) <= x:
+		ZOM_FOV.append([])
+	
+	for i in range(0, 360 / ZOM_FOV_DEV):
+		ZOM_FOV[x].append(pygame.transform.scale(ZOM_FOV[1][i], (2 * ZOM_FOV_MIN * x, 2 * ZOM_FOV_MIN * x)))
+
 def prepare():
 	#TERRAIN
 	global BACKGROUND
@@ -56,17 +66,18 @@ def prepare():
 	global ZOM_SPRITE_IDLE
 	global ZOM_SPRITE_WALK
 	global ZOM_FOV
-	ZOM_SPRITE_MAIN = pygame.image.load(os.path.join(SPRITE_DIR,"zombie_1.png")).convert_alpha()
-	ZOM_SPRITE_WIDTH = 128
-	ZOM_SPRITE_HEIGHT = 128
 
+	#ZOMBIE SPRITES
+	ZOM_SPRITE_MAIN = pygame.image.load(os.path.join(SPRITE_DIR,"zombie_1.png")).convert_alpha()
 	ZOM_SPRITE_IDLE = load_sprite_matrix(ZOM_SPRITE_MAIN, 0, 4, 0, 8, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
 	ZOM_SPRITE_WALK = load_sprite_matrix(ZOM_SPRITE_MAIN, 4, 12, 0, 8, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
 
-	ZOM_FOV.append(pygame.Surface((400,400)))
-	pygame.draw.polygon(ZOM_FOV[0], pygame.Color('0xFF000040'), [(200, 200), (400, 0), (400, 400)])
+	#ZOMBIE FOV
+	#TODO: when no longer necessary for debugging, don't store the images, only store the (preferably trimmed) masks and their dimensions
+	ZOM_FOV[1].append(pygame.Surface((400,400)))
+	pygame.draw.polygon(ZOM_FOV[1][0], pygame.Color('0xFF000040'), [(ZOM_FOV_MIN, ZOM_FOV_MIN), (2*ZOM_FOV_MIN, 0), (2*ZOM_FOV_MIN, 2*ZOM_FOV_MIN)])
 	for i in range(1, 360 / ZOM_FOV_DEV):
-		ZOM_FOV.append(pygame.transform.rotate(ZOM_FOV[0], ZOM_FOV_DEV*i))
+		ZOM_FOV[1].append(pygame.transform.rotate(ZOM_FOV[1][0], ZOM_FOV_DEV*i))
 
 
 	#HERO
@@ -76,9 +87,8 @@ def prepare():
 	global HERO_SPRITE_RUN
 	global HERO_MASK
 
+	#HERO SPRITES
 	HERO_SPRITE_MAIN = pygame.image.load(os.path.join(SPRITE_DIR,"male_unarmored.png")).convert_alpha()
-	HERO_SPRITE_WIDTH = 256
-	HERO_SPRITE_HEIGHT = 256
 	HERO_SPRITE_IDLE = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 1, 0, 8, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT)
 	HERO_SPRITE_WALK = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 4, 0, 8, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT)
 	HERO_SPRITE_RUN = load_sprite_matrix(HERO_SPRITE_MAIN, 4, 6, 0, 8, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT)

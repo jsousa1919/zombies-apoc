@@ -8,8 +8,8 @@ MINFOCUS = 1
 MAXFOCUS = 10
 MINENDUR = 1
 MAXENDUR = 10
-MINSIGHT = 200
-MAXSIGHT = 2000
+MINSIGHT = 1
+MAXSIGHT = 10
 
 ST_IDLE = 0
 ST_SEARCHING = 1
@@ -29,25 +29,25 @@ class Zombie(pygame.sprite.Sprite):
 	def __init__(self, herogroup):
 		pygame.sprite.Sprite.__init__(self) #call Sprite intializer
 		self.screen = pygame.display.get_surface()
+		self.area = self.screen.get_rect()
 
 		self.heroes = herogroup
-		self.hero_focus = None
-		self.state = ST_IDLE
-		self.lt = 0
-
-		self.angle = 0
-
-		self.tick = 0
-		self.direction = 0
 
 		self.focus = 4
 		self.endurance = 4
+		self.sight = 3
+
+		media.request_fov(self.sight)
+
+		self.hero_focus = None
+		self.state = ST_IDLE
+		self.lt = 0
 		self.speaking = False
 		self.MOVE = False
-
 		self.frame = 0
-
-		self.area = self.screen.get_rect()
+		self.angle = 0
+		self.tick = 0
+		self.direction = 0
 		self.speed = MINSPEED
 
 		random.seed()
@@ -71,7 +71,7 @@ class Zombie(pygame.sprite.Sprite):
 			self.frame += 1			
 
 		#create field of view mask
-		fov_image = media.ZOM_FOV[int(self.angle / media.ZOM_FOV_DEV)]
+		fov_image = media.ZOM_FOV[self.sight][int(self.angle / media.ZOM_FOV_DEV)]
 		fov_image.set_colorkey(pygame.Color('black'))
 		fov_rect = fov_image.get_rect(center=self.rect.center)
 		fov_mask = pygame.mask.from_surface(fov_image)
