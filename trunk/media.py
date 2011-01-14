@@ -9,6 +9,7 @@ WINDOW_WIDTH = 1000
 DATA_DIR = "data"
 SPRITE_DIR = os.path.join(DATA_DIR, "sprites")
 SOUND_DIR = os.path.join(DATA_DIR, "sounds")
+TEXTURE_DIR = os.path.join(DATA_DIR, "textures")
 
 #TERRAIN
 BACKGROUND = None
@@ -43,7 +44,12 @@ def load_sprite_matrix(main, xmin, xmax, ymin, ymax, w, h):
 def prepare():
 	#TERRAIN
 	global BACKGROUND
-	BACKGROUND = pygame.image.load(os.path.join(SPRITE_DIR,"flagstone2.jpg")).convert()
+	BACKGROUND = pygame.image.load(os.path.join(TEXTURE_DIR,"flagstone2.jpg")).convert()
+	bg = BACKGROUND
+	bgw, bgh = BACKGROUND.get_rect().right, BACKGROUND.get_rect().bottom
+	for i in xrange(1,int(WINDOW_WIDTH/bgw)):
+		for j in xrange(1, int(WINDOW_WIDTH/bgh)):
+			BACKGROUND.blit(bg, BACKGROUND.get_rect().topleft + (i*256, j*256))
 
 	#ZOMBIE
 	global ZOM_SPRITE_MAIN
