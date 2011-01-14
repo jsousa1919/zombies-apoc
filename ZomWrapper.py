@@ -1,4 +1,4 @@
-import pygame, sys, os, media, Zombie, Hero
+import pygame, sys, os, media, Zombie, Hero, Cursor
 from pygame.locals import *
 
 FPS = 24
@@ -12,8 +12,13 @@ window.blit(media.BACKGROUND, (0,0))
 pygame.display.flip()
 pygame.display.set_caption('ZOMBIE')
 
+cursor = Cursor.Cursor()
+cgroup = pygame.sprite.RenderUpdates()
+cgroup.add(cursor)
+
 zombies = pygame.sprite.RenderUpdates()
 heroes = pygame.sprite.RenderUpdates()
+
 
 for i in xrange(0,1):
   heroes.add(Hero.Hero())
@@ -22,14 +27,19 @@ for i in xrange(0,6):
 	zombies.add(Zombie.Zombie(heroes))
 
 def update():
+	cgroup.clear(window, media.BACKGROUND)
 	zombies.clear(window, media.BACKGROUND)
 	heroes.clear(window, media.BACKGROUND)
+	
+	cgroup.update()
 	zombies.update()
 	heroes.update()
-	rectlist = zombies.draw(window) + heroes.draw(window)
+
+	rectlist = zombies.draw(window) + heroes.draw(window) + cgroup.draw(window)
 	pygame.display.update(rectlist)
 	pygame.display.flip()
 
+pygame.event.set_allowed([KEYDOWN, KEYUP, QUIT])
 clock = pygame.time.Clock()
 quit = False
 while not quit:
@@ -61,9 +71,13 @@ while not quit:
 	elif keyspressed[K_w]:
 		for hero in heroes:
 			hero.move(Hero.UP)
-	events = pygame.event.get([KEYDOWN, KEYUP, QUIT])
-	#if events == [] and pygame.event.poll().type != NOEVENT:
-	#	pygame.event.clear()
+	
+	if keyspressed[K_ESCAPE]:
+		quit = True
+	
+	events = pygame.event.get()
+	if events == [] and pygame.event.poll().type != NOEVENT:
+		pygame.event.pump()
 	for event in events: 
 		if event.type == QUIT: 
 			quit = True

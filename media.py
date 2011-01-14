@@ -3,8 +3,8 @@ import pygame, os
 print "loading media"
 
 #MAIN
-WINDOW_HEIGHT = 800
-WINDOW_WIDTH = 1000
+WINDOW_HEIGHT = 256 * 3
+WINDOW_WIDTH = 256 * 4
 
 DATA_DIR = "data"
 SPRITE_DIR = os.path.join(DATA_DIR, "sprites")
@@ -33,6 +33,11 @@ HERO_SPRITE_WALK = None
 HERO_SPRITE_RUN = None
 HERO_MASK = None
 
+#CURSOR
+CURS_SPRITE_WIDTH = 64
+CURS_SPRITE_HEIGHT = 64
+CURS_SPRITE_MAIN = None
+
 def load_sprite_matrix(main, xmin, xmax, ymin, ymax, w, h):
 	sprites = []
 	for i in xrange(ymin, ymax):
@@ -54,12 +59,14 @@ def request_fov(x):
 def prepare():
 	#TERRAIN
 	global BACKGROUND
-	BACKGROUND = pygame.image.load(os.path.join(TEXTURE_DIR,"flagstone2.jpg")).convert()
-	bg = BACKGROUND
-	bgw, bgh = BACKGROUND.get_rect().right, BACKGROUND.get_rect().bottom
-	for i in xrange(1,int(WINDOW_WIDTH/bgw)):
-		for j in xrange(1, int(WINDOW_WIDTH/bgh)):
-			BACKGROUND.blit(bg, BACKGROUND.get_rect().topleft + (i*256, j*256))
+	BACKGROUND = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+	bg = pygame.image.load(os.path.join(TEXTURE_DIR,"roads/roadPLAZA.tga")).convert()
+	
+	bgw, bgh = bg.get_rect().right, bg.get_rect().bottom
+
+	for i in xrange(0,int(WINDOW_WIDTH/bgw)):
+		for j in xrange(0, int(WINDOW_WIDTH/bgh)):
+			BACKGROUND.blit(bg,(i*bgw, j*bgh))
 
 	#ZOMBIE
 	global ZOM_SPRITE_MAIN
@@ -95,3 +102,11 @@ def prepare():
 
 	HERO_MASK = pygame.mask.from_surface(HERO_SPRITE_IDLE[0][0])
 
+	
+	#MISC
+	global CURS_SPRITE_MAIN
+
+	pygame.mouse.set_visible(False)
+	pygame.mouse.set_pos(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)
+
+	CURS_SPRITE_MAIN = pygame.image.load(os.path.join(SPRITE_DIR,"crosshairs/crosshair6.png")).convert_alpha()
