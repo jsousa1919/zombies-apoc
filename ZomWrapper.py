@@ -1,28 +1,22 @@
-import pygame, sys, os, Zombie, Hero
+import pygame, sys, os, media, Zombie, Hero
 from pygame.locals import *
 
-pygame.init()
-
-WINDOW_HEIGHT = 800
-WINDOW_WIDTH = 1000
 FPS = 24
 
-window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-background = pygame.image.load(os.path.join("data","flagstone2.jpg")).convert()
-window.blit(background, (0,0))
+pygame.init()
+window = pygame.display.set_mode((media.WINDOW_WIDTH, media.WINDOW_HEIGHT))
+pygame.mixer.init(11025)
+media.prepare()
+
+window.blit(media.BACKGROUND, (0,0))
 pygame.display.flip()
 pygame.display.set_caption('ZOMBIE')
 
 zombies = pygame.sprite.RenderUpdates()
-hero = Hero.Hero()
 heroes = pygame.sprite.RenderUpdates()
 
-#for i in xrange(0,1):
-heroes.add(hero)
-
 for i in xrange(0,1):
-	zom = Zombie.Zombie(heroes)
-	zombies.add(zom)
+  heroes.add(Hero.Hero())
 
 for i in xrange(0,6):
 	zombies.add(Zombie.Zombie(heroes))
@@ -32,8 +26,8 @@ def update():
 	heroes.update()
 	rectlist = zombies.draw(window) + heroes.draw(window)
 	pygame.display.update(rectlist)
-	zombies.clear(window, background)
-	heroes.clear(window, background)
+	zombies.clear(window, media.BACKGROUND)
+	heroes.clear(window, media.BACKGROUND)
 
 clock = pygame.time.Clock()
 quit = False
@@ -75,6 +69,8 @@ while not quit:
 		elif event.type == KEYUP and event.key == K_LSHIFT:
 			for hero in heroes:
 				hero.unrun()
+		elif event.type == KEYDOWN and event.key == K_SPACE:
+			zombies.add(Zombie.Zombie(heroes))
 
 pygame.quit()
 sys.exit(0)
