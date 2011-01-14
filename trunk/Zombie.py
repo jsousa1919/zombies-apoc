@@ -32,7 +32,6 @@ class Zombie(pygame.sprite.Sprite):
 
 		self.tick = 0
 		self.direction = 0
-		self.prevDirection = 0
 
 		self.speaking = False
 		self.MOVE = False
@@ -112,19 +111,16 @@ class Zombie(pygame.sprite.Sprite):
 			y = self.speed*math.sin(self.angle)
 			self.rect.centerx += x
 			self.rect.centery -= y
-	
-			if self.direction != self.prevDirection:
-				self.speak()
-				self.prevDirection = self.direction
-	
-			self.MOVE = False
 		else:
-			self.image = self.idle_sprites[self.direction][self.tick % len(self.idle_sprites[self.direction])]
-
+			if self.frame >= len(self.idle_sprites[self.direction]): self.frame = 0
+			self.image = self.idle_sprites[self.direction][self.frame]
+		
 		self.look_for_food()
 
 	def face(self, dirindex):
-		self.direction = dirindex
+		if self.direction != dirindex: 
+			self.speak()
+			self.direction = dirindex
         
 	def set_angle(self, theta):
 		ang = theta
@@ -135,17 +131,17 @@ class Zombie(pygame.sprite.Sprite):
 	    
 		if ang >= 338 or ang < 23:
 			self.face(RIGHT)
-		elif ang in range(23,68):
+		elif 23 <= ang < 68:
 			self.face(UPRIGHT)
-		elif ang in range(68,113):
+		elif 68 <= ang < 113:
 			self.face(UP)
-		elif ang in range(113,158):
+		elif 113 <= ang < 158:
 			self.face(UPLEFT)
-		elif ang in range(158,203):
+		elif 158 <= ang < 203:
 			self.face(LEFT)
-		elif ang in range(203,248):
+		elif 203 <= ang < 248:
 			self.face(DOWNLEFT)
-		elif ang in range(248,293):
+		elif 248 <= ang < 293:
 			self.face(DOWN)
 		else:
 			self.face(DOWNRIGHT)
@@ -157,13 +153,21 @@ class Zombie(pygame.sprite.Sprite):
 
 	def move(self):
 		self.MOVE = True
+	def stop(self):
+		self.MOVE = False
 
 	def look_for_food(self):
 		for hero in self.heroes:
 			x = hero.rect.centerx
 			y = hero.rect.centery
 
-			ang = -math.degrees(math.atan2((y - self.rect.centery),(x - self.rect.centerx)))
+			dist = math.sqrt(math.pow(y - self.rect.centery, 2) + math.pow(x - self.rect.centerx, 2))
+
+			ang = math.degrees(math.atan2((self.rect.centery - y),(x - self.rect.centerx)))
 
 			self.set_angle(ang)
-			self.move()
+			
+			if dist <= 65:
+				self.stop()
+			else:
+				self.move()
