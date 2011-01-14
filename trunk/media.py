@@ -19,7 +19,8 @@ ZOM_SPRITE_HEIGHT = 128
 ZOM_SPRITE_MAIN = None
 ZOM_SPRITE_IDLE = None
 ZOM_SPRITE_WALK = None
-ZOM_FOV = None
+ZOM_FOV = []
+ZOM_FOV_DEV = 4
 
 #HERO
 HERO_SPRITE_WIDTH = 256
@@ -56,8 +57,10 @@ def prepare():
 	ZOM_SPRITE_IDLE = load_sprite_matrix(ZOM_SPRITE_MAIN, 0, 4, 0, 8, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
 	ZOM_SPRITE_WALK = load_sprite_matrix(ZOM_SPRITE_MAIN, 4, 12, 0, 8, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
 
-	ZOM_FOV = pygame.Surface((400,400))
-	pygame.draw.polygon(ZOM_FOV, pygame.Color('0xFF000040'), [(200, 200), (400, 100), (400, 300)])
+	ZOM_FOV.append(pygame.Surface((400,400)))
+	pygame.draw.polygon(ZOM_FOV[0], pygame.Color('0xFF000040'), [(200, 200), (400, 0), (400, 400)])
+	for i in range(1, 360 / ZOM_FOV_DEV):
+		ZOM_FOV.append(pygame.transform.rotate(ZOM_FOV[0], ZOM_FOV_DEV*i))
 
 
 	#HERO
