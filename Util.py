@@ -227,7 +227,6 @@ def initDisplay():
 	
 def init():
 	pygame.init()
-	pygame.key.set_repeat(0,100)
 	
 	#random.seed()
 	
