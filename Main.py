@@ -1,7 +1,6 @@
 import pygame, os, Util, Hero, Zombie
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from OpenGL.glut import *
 from pygame.locals import *
 
 hero = None
@@ -15,7 +14,6 @@ def draw():
 	hero.draw()
 	zombie.draw()
 	
-	glutSwapBuffers()
 	pygame.display.flip()
 	
 def handleKeys():
@@ -44,7 +42,7 @@ def handleKeys():
 		hero.stop()
 		
 	if keyspressed[K_LSHIFT]: hero.run()
-	else: unrun()
+	else: hero.unrun()
 	
 	return 1
 	
