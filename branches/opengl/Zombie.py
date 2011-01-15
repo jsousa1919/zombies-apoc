@@ -1,6 +1,8 @@
-import pygame, sys, os, random, timer, math, time, operator, media
+import pygame, sys, os, random, timer, math, time, operator, Util
 from pygame.locals import *
+from OpenGL.GL import *
 
+#Stats
 MAXSPEED = 12
 MIDSPEED = 8
 MINSPEED = 4
@@ -15,6 +17,7 @@ ST_IDLE = 0
 ST_SEARCHING = 1
 ST_ATTACKING = 2
 
+#Sprite Direction Indices
 LEFT = 1
 UPLEFT = 2
 UP = 3
@@ -24,20 +27,16 @@ DOWNRIGHT = 6
 DOWN = 7
 DOWNLEFT = 0
 
-class Zombie(pygame.sprite.Sprite):
+class Zombie():
 #init
-	def __init__(self, herogroup):
-		pygame.sprite.Sprite.__init__(self) #call Sprite intializer
-		self.screen = pygame.display.get_surface()
-		self.area = self.screen.get_rect()
-
-		self.heroes = herogroup
+	def __init__(self, player):
+		self.hero = player
 
 		self.focus = 4
 		self.endurance = 4
-		self.sight = 2
+		self.sight = 3
 
-		media.request_fov(self.sight)
+		Util.request_fov(self.sight)
 
 		self.hero_focus = None
 		self.state = ST_IDLE
@@ -49,78 +48,73 @@ class Zombie(pygame.sprite.Sprite):
 		self.tick = 0
 		self.direction = 0
 		self.speed = MINSPEED
-		self.speed_mod = random.randrange(0, MINSPEED)
 
 		random.seed()
-		x = random.random() * media.WINDOW_WIDTH
-		y = random.random() * media.WINDOW_HEIGHT
+		self.posx = random.random() * Util.WINDOW_WIDTH
+		self.posy = random.random() * Util.WINDOW_HEIGHT
 
-		self.image = media.ZOM_SPRITE_IDLE[0][0]
-		self.rect = media.ZOM_SPRITE_IDLE[0][0].get_rect(center=(x,y))
-
-		self.lkl = x, y
+		self.lkl = self.posx, self.posy
 
 		self.update()
+		
+	def getDisplayList(self):
+		if self.MOVE:
+			return Util.ZOM_WALK_DISPLIST[self.direction][self.frame]
+		else:
+			return Util.ZOM_IDLE_DISPLIST[self.direction][self.frame]
+			
+	def draw(self):
+		glLoadIdentity()
+		glTranslatef(self.posx, self.posy, 0)
+		glCallList(self.getDisplayList())
 
 #update
 	def update(self):
-		
 		self.tick += 1
 
 		#scale frame switching to zombie speed
-		if self.tick % int((MAXSPEED + self.speed_mod )/ self.speed) == 0: 
-			self.frame += 1			
+		if self.tick % int(MAXSPEED / self.speed) == 0: 
+			self.frame += 1
 
 		#create field of view mask
-		fov_image = media.ZOM_FOV[self.sight][int(self.angle / media.ZOM_FOV_DEV)]
-		fov_rect = fov_image.get_rect(center=self.rect.center)
-
-		# for viewing FOV
-		#self.image = fov_image = media.ZOM_FOV[self.sight][int(self.angle / media.ZOM_FOV_DEV)]
-		#self.rect = self.image.get_rect(center=self.rect.center)
-
+		fov_image = Util.ZOM_FOV[self.sight][int(self.angle / Util.ZOM_FOV_DEV)]
+		fov_image.set_colorkey(pygame.Color('black'))
+		fov_rect = fov_image.get_rect(center=(self.posx+Util.ZOM_SPRITE_WIDTH/2, self.posy+Util.ZOM_SPRITE_HEIGHT/2))
 		fov_mask = pygame.mask.from_surface(fov_image)
 
 		#interact with heroes
-		if self.tick % 5 == 0:
-			for hero in self.heroes:
-				hero_center = hero.rect.center
-				world_diff = map(operator.sub, hero_center, self.rect.center) # actual position difference
-				local_diff = map(operator.sub, fov_image.get_rect().center, hero.image.get_rect().center) # difference to account for sprite size
-				diff = map(operator.add, world_diff, local_diff)
+		hero_center = (self.hero.posx + Util.HERO_SPRITE_WIDTH/2, self.hero.posy + Util.HERO_SPRITE_HEIGHT/2)
+		world_diff = map(operator.sub, hero_center, fov_image.get_rect().center) # actual position difference
+		local_diff = map(operator.sub, fov_image.get_rect().center, hero_center) # difference to account for sprite size
+		diff = map(operator.add, world_diff, local_diff)
 
-				if fov_mask.overlap(media.HERO_MASK, diff):
-					#start hero sighted
-					#self.speak() 
-					#print "attack!"
-					self.hero_focus = hero
-					self.lkl = hero_center
-					self.lt = self.tick
-					self.state = ST_ATTACKING
-					self.set_speed(MIDSPEED)
+		if fov_mask.overlap(Util.HERO_MASK, diff):
+			#start hero sighted
+			#self.speak() 
+			#print "attack!"
+			self.hero_focus = self.hero
+			self.lkl = hero_center
+			self.lt = self.tick
+			self.state = ST_ATTACKING
+			self.speed = MIDSPEED
 
 		#state specific actions
-		if self.state == ST_ATTACKING and self.tick - self.lt > 5:
+		if self.state == ST_ATTACKING and self.lt != self.tick:
 			self.state = ST_SEARCHING
 	
 		if self.state > ST_IDLE and (self.tick - self.lt) > (self.endurance * 100):
 			self.stop()
-			self.set_speed(MINSPEED)
+			self.speed = MINSPEED
 			self.state = ST_IDLE
 
 		if self.state < ST_ATTACKING:
 			if (self.tick - self.lt) % (self.focus * 25) == 0:
-				#print "change"
 				self.rand_lkl(50)
-			#if self.MOVE == False:
-			#	self.add_to_angle(self.focus * (random.random() - 0.5) * 20)
 
 		self.goto_lkl()
-
-		#draw zombie
+		
 		if self.MOVE:
 			if self.frame >= len(media.ZOM_SPRITE_WALK[self.direction]): self.frame = 0
-			im = media.ZOM_SPRITE_WALK[self.direction][self.frame]
 
 			x = self.speed*math.cos(math.radians(self.angle))
 			y = self.speed*math.sin(math.radians(self.angle))
@@ -128,18 +122,14 @@ class Zombie(pygame.sprite.Sprite):
 			self.rect.centery -= y
 
 		else:
-			if self.frame >= len(media.ZOM_SPRITE_IDLE[self.direction]): self.frame = 0
-			im = media.ZOM_SPRITE_IDLE[self.direction][self.frame]
-		
-		#self.image.blit(im, map(operator.sub, self.image.get_rect().center, im.get_rect().center))	# for viewing FOV
-		self.image = im																				# for invisible FOV
-
+			if self.frame >= len(Util.ZOM_SPRITE_IDLE[self.direction]): self.frame = 0																		# for invisible FOV
+	
 #actions
 	def speak(self):
 		if self.speaking:
 			return
 		id = random.randrange(1,24,1)
-		file_path = os.path.join('sounds', 'zombie-%d.ogg' % id)
+		file_path = os.path.join(Util.SOUND_DIR, 'zombie-%d.ogg' % id)
 		sound = pygame.mixer.Sound(file_path)
 
 		#print ('Playing Sound...')
@@ -190,14 +180,9 @@ class Zombie(pygame.sprite.Sprite):
 			self.face(DOWN)
 		else:
 			self.face(DOWNRIGHT)
-			
-		self.angle = ang
 
-	def add_to_angle(self, delta):
+	def rotate(self, delta):
 		self.set_angle(self.angle + delta)
-
-	def set_speed(self, speed):
-		self.speed = speed + self.speed_mod
 
 	def rand_lkl(self, rmin = 0, rmax = 200):
 		x = random.randrange(rmin, rmax, 1)
@@ -208,15 +193,9 @@ class Zombie(pygame.sprite.Sprite):
 
 	def goto_lkl(self, nogo = 65):
 		x, y = self.lkl
-		dist = math.hypot(y - self.rect.centery, x - self.rect.centerx)
-		ang = math.degrees(math.atan2((self.rect.centery - y),(x - self.rect.centerx)))
-		ldiff = (ang - self.angle) % 360
-		rdiff = (self.angle - ang) % 360
-		if (ldiff < rdiff):
-			self.add_to_angle(ldiff / 5)
-		else:
-			self.add_to_angle(-rdiff / 5)
-#		self.set_angle(ang)
+		dist = math.hypot(y - self.posy, x - self.posx)
+		ang = math.degrees(math.atan2((self.posy - y),(x - self.posx)))
+		self.set_angle(ang)
 		
 		if dist <= nogo:
 			self.stop()
