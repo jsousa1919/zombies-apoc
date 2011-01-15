@@ -65,7 +65,7 @@ class Zombie():
 			
 	def draw(self):
 		glLoadIdentity()
-		glTranslatef(self.posx, self.posy, 0)
+		glTranslatef(self.posx - Util.ZOM_SPRITE_WIDTH/2, self.posy - Util.ZOM_SPRITE_WIDTH/2, 0)
 		glCallList(self.getDisplayList())
 
 #update
@@ -79,11 +79,11 @@ class Zombie():
 		#create field of view mask
 		fov_image = Util.ZOM_FOV[self.sight][int(self.angle / Util.ZOM_FOV_DEV)]
 		fov_image.set_colorkey(pygame.Color('black'))
-		fov_rect = fov_image.get_rect(center=(self.posx+Util.ZOM_SPRITE_WIDTH/2, self.posy+Util.ZOM_SPRITE_HEIGHT/2))
+		fov_rect = fov_image.get_rect(center=(self.posx, self.posy))
 		fov_mask = pygame.mask.from_surface(fov_image)
 
 		#interact with heroes
-		hero_center = (self.hero.posx + Util.HERO_SPRITE_WIDTH/2, self.hero.posy + Util.HERO_SPRITE_HEIGHT/2)
+		hero_center = (self.hero.posx, self.hero.posy)
 		world_diff = map(operator.sub, hero_center, fov_image.get_rect().center) # actual position difference
 		local_diff = map(operator.sub, fov_image.get_rect().center, hero_center) # difference to account for sprite size
 		diff = map(operator.add, world_diff, local_diff)
@@ -118,8 +118,8 @@ class Zombie():
 
 			x = self.speed*math.cos(math.radians(self.angle))
 			y = self.speed*math.sin(math.radians(self.angle))
-			self.rect.centerx += x
-			self.rect.centery -= y
+			self.posx += x
+			self.posy += y
 
 		else:
 			if self.frame >= len(Util.ZOM_SPRITE_IDLE[self.direction]): self.frame = 0																		# for invisible FOV

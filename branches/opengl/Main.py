@@ -1,6 +1,7 @@
 import pygame, os, Util, Hero, Zombie
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.glut import *
 from pygame.locals import *
 
 hero = None
@@ -9,18 +10,19 @@ FPS = 30
 
 def draw():
 	glLoadIdentity()
-	glCallList(Util.BG_DISPLIST)
 	
+	glCallList(Util.BG_DISPLIST)
 	hero.draw()
 	zombie.draw()
 	
+	glutSwapBuffers()
 	pygame.display.flip()
 	
 def handleKeys():
 	keyspressed = pygame.key.get_pressed()
 	
 	if keyspressed[K_ESCAPE]:
-		return QUIT	
+		return 0	
 	
 	if keyspressed[K_a] and keyspressed[K_s]:
 		hero.move(Hero.DOWNLEFT)
@@ -40,8 +42,11 @@ def handleKeys():
 		hero.move(Hero.UP)
 	else:
 		hero.stop()
+		
+	if keyspressed[K_LSHIFT]: hero.run()
+	else: unrun()
 	
-	return 0
+	return 1
 	
 def initPlayer():
 	global hero
@@ -51,13 +56,14 @@ def initPlayer():
 	
 def update():
 	hero.update()
+	zombie.update()
 	
 def main():
 	Util.init()
 	initPlayer()
 
 	frames = 0
-	pygame.event.set_allowed([KEYDOWN, KEYUP, QUIT])
+	pygame.event.set_allowed([QUIT])
 	clock = pygame.time.Clock()
 	
 	quit = False
@@ -67,21 +73,19 @@ def main():
 		update()
 		draw()
 		
-		events = pygame.event.get()
-		if events == [] and pygame.event.poll().type != NOEVENT:
-			pygame.event.pump()
+		event = pygame.event.poll()
 			
-		if handleKeys() == QUIT:
+		if not handleKeys():
+			quit = True
+	
+		if event.type == QUIT: 
 			quit = True
 		
-		for event in events: 
-			if event.type == QUIT: 
-				quit = True
-			elif event.type == KEYDOWN and event.key == K_LSHIFT:
-				hero.run()
-			elif event.type == KEYUP and event.key == K_LSHIFT:
-				hero.unrun()
-	
+		elif event.type == KEYDOWN and event.key == K_LSHIFT:
+			hero.run()
+		elif event.type == KEYUP and event.key == K_LSHIFT:
+			hero.unrun()
+
 	Util.cleanUp()
 	
 if __name__ == '__main__': main()

@@ -28,7 +28,7 @@ class Hero:
 		self.direction = 0
 		self.frame = 0
 
-		self.posx, self.posy = 50, 50
+		self.posx, self.posy = Util.WINDOW_WIDTH/2, Util.WINDOW_HEIGHT/2
 		self.angle = 0
 
 		self.update()
@@ -41,7 +41,7 @@ class Hero:
 			
 	def draw(self):
 		glLoadIdentity()
-		glTranslatef(self.posx, self.posy, 0)
+		glTranslatef(self.posx - Util.HERO_SPRITE_WIDTH, self.posy - Util.HERO_SPRITE_HEIGHT, 0)
 		glCallList(self.getDisplayList())
 		
 	def update(self):
