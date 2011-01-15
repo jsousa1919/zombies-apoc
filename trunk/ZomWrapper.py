@@ -76,8 +76,7 @@ while not quit:
 		quit = True
 	
 	events = pygame.event.get()
-	if events == [] and pygame.event.poll().type != NOEVENT:
-		pygame.event.pump()
+	pygame.event.pump()
 	for event in events: 
 		if event.type == QUIT: 
 			quit = True

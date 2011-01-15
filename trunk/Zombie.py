@@ -35,7 +35,7 @@ class Zombie(pygame.sprite.Sprite):
 
 		self.focus = 4
 		self.endurance = 4
-		self.sight = 3
+		self.sight = 2
 
 		media.request_fov(self.sight)
 
@@ -49,6 +49,7 @@ class Zombie(pygame.sprite.Sprite):
 		self.tick = 0
 		self.direction = 0
 		self.speed = MINSPEED
+		self.speed_mod = random.randrange(0, MINSPEED)
 
 		random.seed()
 		x = random.random() * media.WINDOW_WIDTH
@@ -67,45 +68,44 @@ class Zombie(pygame.sprite.Sprite):
 		self.tick += 1
 
 		#scale frame switching to zombie speed
-		if self.tick % int(MAXSPEED / self.speed) == 0: 
+		if self.tick % int((MAXSPEED + self.speed_mod )/ self.speed) == 0: 
 			self.frame += 1			
 
 		#create field of view mask
 		fov_image = media.ZOM_FOV[self.sight][int(self.angle / media.ZOM_FOV_DEV)]
-		fov_image.set_colorkey(pygame.Color('black'))
 		fov_rect = fov_image.get_rect(center=self.rect.center)
-		fov_mask = pygame.mask.from_surface(fov_image)
 
 		# for viewing FOV
-		#fov_image = self.image = pygame.transform.rotate(media.ZOM_FOV, self.angle)
-		#self.image.set_colorkey(pygame.Color('black'))
+		#self.image = fov_image = media.ZOM_FOV[self.sight][int(self.angle / media.ZOM_FOV_DEV)]
 		#self.rect = self.image.get_rect(center=self.rect.center)
-		#fov_mask = pygame.mask.from_surface(self.image)
+
+		fov_mask = pygame.mask.from_surface(fov_image)
 
 		#interact with heroes
-		for hero in self.heroes:
-			hero_center = hero.rect.center
-			world_diff = map(operator.sub, hero_center, self.rect.center) # actual position difference
-			local_diff = map(operator.sub, fov_image.get_rect().center, hero.image.get_rect().center) # difference to account for sprite size
-			diff = map(operator.add, world_diff, local_diff)
+		if self.tick % 5 == 0:
+			for hero in self.heroes:
+				hero_center = hero.rect.center
+				world_diff = map(operator.sub, hero_center, self.rect.center) # actual position difference
+				local_diff = map(operator.sub, fov_image.get_rect().center, hero.image.get_rect().center) # difference to account for sprite size
+				diff = map(operator.add, world_diff, local_diff)
 
-			if fov_mask.overlap(media.HERO_MASK, diff):
-				#start hero sighted
-				#self.speak() 
-				#print "attack!"
-				self.hero_focus = hero
-				self.lkl = hero_center
-				self.lt = self.tick
-				self.state = ST_ATTACKING
-				self.speed = MIDSPEED
+				if fov_mask.overlap(media.HERO_MASK, diff):
+					#start hero sighted
+					#self.speak() 
+					#print "attack!"
+					self.hero_focus = hero
+					self.lkl = hero_center
+					self.lt = self.tick
+					self.state = ST_ATTACKING
+					self.set_speed(MIDSPEED)
 
 		#state specific actions
-		if self.state == ST_ATTACKING and self.lt != self.tick:
+		if self.state == ST_ATTACKING and self.tick - self.lt > 5:
 			self.state = ST_SEARCHING
 	
 		if self.state > ST_IDLE and (self.tick - self.lt) > (self.endurance * 100):
 			self.stop()
-			self.speed = MINSPEED
+			self.set_speed(MINSPEED)
 			self.state = ST_IDLE
 
 		if self.state < ST_ATTACKING:
@@ -196,6 +196,9 @@ class Zombie(pygame.sprite.Sprite):
 	def add_to_angle(self, delta):
 		self.set_angle(self.angle + delta)
 
+	def set_speed(self, speed):
+		self.speed = speed + self.speed_mod
+
 	def rand_lkl(self, rmin = 0, rmax = 200):
 		x = random.randrange(rmin, rmax, 1)
 		if x % 2 == 0: x = -x
@@ -207,7 +210,13 @@ class Zombie(pygame.sprite.Sprite):
 		x, y = self.lkl
 		dist = math.hypot(y - self.rect.centery, x - self.rect.centerx)
 		ang = math.degrees(math.atan2((self.rect.centery - y),(x - self.rect.centerx)))
-		self.set_angle(ang)
+		ldiff = (ang - self.angle) % 360
+		rdiff = (self.angle - ang) % 360
+		if (ldiff < rdiff):
+			self.add_to_angle(ldiff / 5)
+		else:
+			self.add_to_angle(-rdiff / 5)
+#		self.set_angle(ang)
 		
 		if dist <= nogo:
 			self.stop()

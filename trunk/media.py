@@ -23,6 +23,7 @@ ZOM_SPRITE_WALK = None
 ZOM_FOV = [[], []]
 ZOM_FOV_DEV = 4
 ZOM_FOV_MIN = 200
+ZOM_AOI = [[], []]
 
 #HERO
 HERO_SPRITE_WIDTH = 256
@@ -48,6 +49,7 @@ def load_sprite_matrix(main, xmin, xmax, ymin, ymax, w, h):
 
 
 def request_fov(x):
+	global ZOM_FOV
 	if len(ZOM_FOV) > x > 0 and ZOM_FOV[x] != []:
 		return
 	while len(ZOM_FOV) <= x:
@@ -81,10 +83,12 @@ def prepare():
 
 	#ZOMBIE FOV
 	#TODO: when no longer necessary for debugging, don't store the images, only store the (preferably trimmed) masks and their dimensions
-	ZOM_FOV[1].append(pygame.Surface((400,400)))
-	pygame.draw.polygon(ZOM_FOV[1][0], pygame.Color('0xFF000040'), [(ZOM_FOV_MIN, ZOM_FOV_MIN), (2*ZOM_FOV_MIN, 0), (2*ZOM_FOV_MIN, 2*ZOM_FOV_MIN)])
+	ZOM_FOV[1].append(pygame.Surface((2*ZOM_FOV_MIN, 2*ZOM_FOV_MIN)))
+	pygame.draw.polygon(ZOM_FOV[1][0], pygame.Color('0xFF000040'), [(ZOM_FOV_MIN * 7 / 8, ZOM_FOV_MIN), (2*ZOM_FOV_MIN, 0), (2*ZOM_FOV_MIN, 2*ZOM_FOV_MIN)])
 	for i in range(1, 360 / ZOM_FOV_DEV):
-		ZOM_FOV[1].append(pygame.transform.rotate(ZOM_FOV[1][0], ZOM_FOV_DEV*i))
+		raw = pygame.transform.rotate(ZOM_FOV[1][0], ZOM_FOV_DEV*i)
+		raw.set_colorkey(pygame.Color('black'))
+		ZOM_FOV[1].append(raw)
 
 
 	#HERO
