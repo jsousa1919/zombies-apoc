@@ -114,7 +114,7 @@ class Zombie():
 		self.goto_lkl()
 		
 		if self.MOVE:
-			if self.frame >= len(media.ZOM_SPRITE_WALK[self.direction]): self.frame = 0
+			if self.frame >= len(Util.ZOM_SPRITE_WALK[self.direction]): self.frame = 0
 
 			x = self.speed*math.cos(math.radians(self.angle))
 			y = self.speed*math.sin(math.radians(self.angle))
