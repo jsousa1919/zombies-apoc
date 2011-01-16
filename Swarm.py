@@ -26,14 +26,21 @@ class Swarm:
 
 		fov = Util.ZOM_FOV[sight][theta / Util.ZOM_FOV_DEV]
 		fov_rect = fov.get_rect(center=loc)
-		fov_mask = pygame.mask.from_surface(fov)
+		fov_mask = Util.ZOM_FOV_MASK[sight][theta / Util.ZOM_FOV_DEV]
 		hit_mask = self.mask.overlap_mask(fov_mask, fov_rect.topleft)
-		hit_num = hit_mask.count()
-		hit_list = hit_mask.get_bounding_rects()
+
+		#hit_list = hit_mask.get_bounding_rects()
+		hit_count = 0
 		x, y = (0, 0)
-		for hit in hit_list:
-			if hit.center in self.sightings:
-				p = self.sightings[hit.center]
-				x += p[0] / hit_num
-				y += p[1] / hit_num
-		return hit_num, (x,y)
+		for hit in self.sightings.keys():
+			if hit_mask.get_at(hit):
+				p = self.sightings[hit]
+				x += p[0]
+				y += p[1]
+				hit_count += 1
+			if hit_count == 5:
+				break
+		if hit_count:
+			x /= hit_count
+			y /= hit_count
+		return hit_count, (x,y)
