@@ -12,11 +12,11 @@ MINENDUR = 1
 MAXENDUR = 10
 MINSIGHT = 1
 MAXSIGHT = 10
-MAXHEALTH = 10
 
-ST_DEAD = -1
 ST_IDLE = 0
 ST_SEARCHING = 1
+#ST_SWARMING
+#ST_CHASING
 ST_ATTACKING = 2
 
 class Zombie():
@@ -27,8 +27,7 @@ class Zombie():
 
 		self.focus = 4
 		self.endurance = 4
-		self.sight = 2
-		self.hp = 10
+		self.sight = 3
 
 		Util.request_fov(self.sight)
 
@@ -47,19 +46,19 @@ class Zombie():
 
 		random.seed()
 		self.posx = random.random() * Util.WINDOW_WIDTH
-		self.posy = 100 #random.random() * Util.WINDOW_HEIGHT
+		self.posy = random.random() * Util.WINDOW_HEIGHT
+		self.rect = pygame.Rect((0,0), (Util.ZOM_SPRITE_WIDTH, Util.ZOM_SPRITE_HEIGHT)) 
+		self.rect.center = (self.posx, self.posy)
 
-		self.lkl = self.posx, self.posy
+		self.lkl = self.rect.center
 
 		self.update()
 		
 	def getDisplayList(self):
-		if self.state == ST_DEAD:
-			return Util.ZOM_DEAD_DISPLIST[self.frame]
-		elif self.MOVE:
-			return Util.ZOM_WALK_DISPLIST[self.frame]
+		if self.MOVE:
+			return Util.ZOM_WALK_DISPLIST[self.frame % len(Util.ZOM_SPRITE_WALK)]
 		else:
-			return Util.ZOM_IDLE_DISPLIST[self.frame]
+			return Util.ZOM_IDLE_DISPLIST[self.frame % len(Util.ZOM_SPRITE_IDLE)]
 			
 	def draw(self):
 		glLoadIdentity()
@@ -74,69 +73,65 @@ class Zombie():
 
 #update
 	def update(self):
-		if self.state == ST_DEAD and self.frame == len(UTIL.ZOM_DEAD_DISPLIST)-1:
-			return
 		self.tick += 1
 
 		#scale frame switching to zombie speed
-		if self.tick % int((MAXSPEED + self.speed_mod) / self.speed) == 0: 
+		if self.tick % int(MAXSPEED + self.speed_mod / self.speed) == 0: 
 			self.frame += 1
-			
-		if self.state != ST_DEAD:
-			#create field of view mask
-			ang = int(self.angle / Util.ZOM_FOV_DEV)
-			fov_image = Util.ZOM_FOV[self.sight][ang]
-			fov_mask = Util.ZOM_FOV_MASK[self.sight][ang]
 
-			#interact with hero
-			if self.tick % 5 == 0:
-				hero_center = (self.hero.posx, self.hero.posy)
-				adjusted = (self.hero.posx, -self.hero.posy)
-				world_diff = map(operator.sub, adjusted, (self.posx, -self.posy)) # actual position difference
-				local_diff = map(operator.sub, fov_image.get_rect().center, (Util.HERO_SPRITE_WIDTH / 2, Util.HERO_SPRITE_HEIGHT / 2)) # difference to account for sprite size
-				diff = map(int, map(operator.add, world_diff, local_diff))
+		#create field of view mask
+		ang = int(self.angle / Util.ZOM_FOV_DEV)
+		fov_image = Util.ZOM_FOV[self.sight][ang]
+		fov_mask = Util.ZOM_FOV_MASK[self.sight][ang]
 
-				if fov_mask.overlap(Util.HERO_MASK, diff):
-					#start hero sighted
-					#self.speak() 
-					#print "attack! ", hero_center
-					self.hero_focus = self.hero
-					self.lkl = hero_center
-					self.lt = self.tick
-					self.state = ST_ATTACKING
-					self.swarming = False
-					self.set_speed(MIDSPEED)
+		#interact with hero
+		#if self.tick % 5 == 0:
+		hero_center = (self.hero.posx, self.hero.posy)
+		world_diff = map(operator.sub, hero_center, self.rect.center) # actual position difference
+		local_diff = map(operator.sub, fov_image.get_rect().center, (Util.HERO_SPRITE_WIDTH / 2, Util.HERO_SPRITE_HEIGHT / 2)) # difference to account for sprite size
+		diff = map(int, map(operator.add, world_diff, local_diff))
 
-			#state specific actions	
+		if fov_mask.overlap(Util.HERO_MASK, diff):
+			#start hero sighted
+			#self.speak() 
+			#print "attack! ", hero_center
+			self.hero_focus = self.hero
+			self.lkl = hero_center
+			self.lt = self.tick
+			self.state = ST_ATTACKING
+			self.end_swarm()
+			self.set_speed(MIDSPEED)
+
+		#state specific actions	
 	
-			if self.state == ST_ATTACKING:
-				self.swarm.add((self.posx, self.posy), self.lkl)
+		if self.state == ST_ATTACKING:
+			self.swarm.add(self.rect.center, self.lkl)
 
-			if self.state == ST_ATTACKING and self.lt != self.tick:
-				self.state = ST_SEARCHING
+		if self.state == ST_ATTACKING and self.tick - self.lt > 10:
+			self.state = ST_SEARCHING
 	
-			if self.state > ST_IDLE and (self.tick - self.lt) > (self.endurance * 100):
-				self.stop()
-				self.set_speed(MINSPEED)
-				self.state = ST_IDLE
+		if self.state > ST_IDLE and (self.tick - self.lt) > (self.endurance * 25):
+			self.stop()
+			self.set_speed(MINSPEED)
+			self.state = ST_IDLE
 
-			if self.state < ST_ATTACKING:
-				if (self.tick - self.lt) % (self.focus * 25) == 0:
-					self.rand_lkl(50)
+		if self.state < ST_ATTACKING:
+			if (self.tick - self.lt) == random.randrange(75, (self.focus * self.speed * 25)):
+				self.rand_lkl(100)
 
-			self.goto_lkl()
+		self.goto_lkl()
 		
-			if self.MOVE:
-				if self.frame >= len(Util.ZOM_SPRITE_WALK): self.frame = 0
+		if self.MOVE:
+			if self.frame >= len(Util.ZOM_SPRITE_WALK): self.frame = 0
 
-				x = self.speed*math.cos(math.radians(self.angle))
-				y = self.speed*math.sin(math.radians(self.angle))
-				self.posx += x
-				self.posy += y
+			x = self.speed*math.cos(math.radians(self.angle))
+			y = self.speed*math.sin(math.radians(self.angle))
+			self.center(self.posx + x, self.posy + y)
 
-			else:
-				self.end_swarm(None)
-				if self.frame >= len(Util.ZOM_SPRITE_IDLE): self.frame = 0
+		else:
+			self.end_swarm()
+			if self.frame >= len(Util.ZOM_SPRITE_IDLE): self.frame = 0
+	
 #actions
 	def speak(self):
 		if self.speaking:
@@ -164,7 +159,14 @@ class Zombie():
 	def move(self):
 		self.MOVE = True
 	def stop(self):
+		self.swarming = False
 		self.MOVE = False
+
+	def center(self, x, y = None):
+		if y != None:
+			(self.posx, self.posy) = self.rect.center = (x, y)
+		else:
+			(self.posx, self.posy) = self.rect.center = x	
 
 	def set_speed(self, speed):
 		self.speed = speed + self.speed_mod
@@ -182,8 +184,10 @@ class Zombie():
 		y = random.randrange(rmin, rmax, 1)
 		if y % 2 == 0: y = -y
 		self.lkl = self.lkl[0] + x, self.lkl[1] + y
+		if random.randrange(0, 100) < self.speed:
+			self.swarming = True
 
-	def goto_lkl(self, nogo = 65):
+	def goto_lkl(self, nogo = 20):
 		x, y = self.lkl
 		dist = math.hypot(y - self.posy, x - self.posx)
 		ang = math.degrees(math.atan2((y - self.posy),(x - self.posx)))
@@ -213,13 +217,28 @@ class Zombie():
 				self.swarming = True
 
 	def prop_swarm(self):
-		if self.swarming:
-			self.swarm.add((self.posx, self.posy), self.lkl)
+		if Util.SUPERSWARM and self.swarming:
+			self.swarm.add(self.rect.center, self.rect.center)
 	
-	def end_swarm(self, dummy):
+	def end_swarm(self):
 		self.swarming == False
-	
-	def damage(self):
-		self.health -= 5
-		if self.health <= 0:
-			self.state = ST_DEAD
+
+	def collide(self, other):
+		x, y = other.rect.center
+		dist = math.hypot(y - self.posy, x - self.posx)
+		overlap = (Util.ZOM_SPRITE_WIDTH / 4) - dist
+		if dist != 0 and overlap > 0:
+			ang = math.degrees(math.atan2((y - self.posy),(x - self.posx)))
+			other.push(overlap / 4, ang)
+			self.push(overlap / 4, ang + 180)
+
+	def push(self, mag, ang):
+		ang %= 360
+		if abs((180 - (ang - self.angle)) > 150):
+			self.stop()
+		else:
+			self.move()
+		x = mag*math.cos(math.radians(ang))
+		y = mag*math.sin(math.radians(ang))
+		self.center(self.posx + x, self.posy + y)
+			
