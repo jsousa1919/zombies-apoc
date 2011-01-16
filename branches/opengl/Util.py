@@ -12,6 +12,8 @@ SPRITE_DIR = os.path.join(DATA_DIR, "sprites")
 SOUND_DIR = os.path.join(DATA_DIR, "sounds")
 TEXTURE_DIR = os.path.join(DATA_DIR, "textures")
 
+FPS = 30
+
 #TERRAIN
 BACKGROUND = None
 BG_DISPLIST = None
@@ -22,8 +24,14 @@ ZOM_SPRITE_HEIGHT = 128
 ZOM_SPRITE_MAIN = None
 ZOM_SPRITE_IDLE = None
 ZOM_SPRITE_WALK = None
+ZOM_SPRITE_DAMG = None
+ZOM_SPRITE_DEAD = None
+ZOM_SPRITE_ATTK = None
 ZOM_IDLE_DISPLIST = None
 ZOM_WALK_DISPLIST = None
+ZOM_DAMG_DISPLIST = None
+ZOM_DEAD_DISPLIST = None
+ZOM_ATTK_DISPLIST = None
 
 ZOM_FOV = [[], []]
 ZOM_FOV_MASK = [[], []]
@@ -46,10 +54,14 @@ CURS_SPRITE_HEIGHT = 64
 CURS_SPRITE_MAIN = None
 CURS_DISPLIST = None
 
+#BULLET TRACER
+BULLET_DISPLIST = None
+TRACER_COLOR = 0.0, 1.0, 1.0
+
 def load_sprite_matrix(main, xmin, xmax, ymin, ymax, w, h):
 	sprites = []
-	for i in xrange(ymin, ymax+1):
-		for j in xrange(xmin, xmax+1):
+	for i in xrange(ymin, ymax):
+		for j in xrange(xmin, xmax):
 			sprites.append(toTexture(main.subsurface(j*w, i*h, w, h), w, h))
 	return sprites
 
@@ -113,20 +125,32 @@ def cleanUp():
 	delTexture(ZOM_SPRITE_WALK)
 	delTexture(HERO_SPRITE_IDLE)
 	delTexture(HERO_SPRITE_WALK)
+	delTexture(ZOM_SPRITE_DAMG)
+	delTexture(ZOM_SPRITE_DEAD)
+	delTexture(ZOM_SPRITE_ATTK)
 	
 	delDList(HERO_IDLE_DISPLIST)
 	delDList(HERO_WALK_DISPLIST)
 	delDList(ZOM_IDLE_DISPLIST)
 	delDList(ZOM_WALK_DISPLIST)
+	delDList(ZOM_DAMG_DISPLIST)
+	delDList(ZOM_DEAD_DISPLIST)
+	delDList(ZOM_ATTK_DISPLIST)
 	
 	delDList(CURS_DISPLIST)
+	
+	delDList(BULLET_DISPLIST)
 	
 def initDispLists():
 	global ZOM_IDLE_DISPLIST
 	global ZOM_WALK_DISPLIST
+	global ZOM_DAMG_DISPLIST
+	global ZOM_DEAD_DISPLIST
+	global ZOM_ATTK_DISPLIST
 	global HERO_IDLE_DISPLIST
 	global HERO_WALK_DISPLIST
 	global CURS_DISPLIST
+	global BULLET_DISPLIST
 	
 	ZOM_IDLE_DISPLIST = []
 	for i in xrange(0, len(ZOM_SPRITE_IDLE)):
@@ -135,6 +159,18 @@ def initDispLists():
 	ZOM_WALK_DISPLIST = []
 	for i in xrange(0, len(ZOM_SPRITE_WALK)):
 		ZOM_WALK_DISPLIST.append(createTexDList(ZOM_SPRITE_WALK[i], ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT))
+	
+	ZOM_DAMG_DISPLIST = []
+	for i in xrange(0, len(ZOM_SPRITE_DAMG)):
+		ZOM_DAMG_DISPLIST.append(createTexDList(ZOM_SPRITE_DAMG[i], ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT))
+	
+	ZOM_DEAD_DISPLIST = []
+	for i in xrange(0, len(ZOM_SPRITE_DEAD)):
+		ZOM_DEAD_DISPLIST.append(createTexDList(ZOM_SPRITE_DEAD[i], ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT))
+	
+	ZOM_ATTK_DISPLIST = []
+	for i in xrange(0, len(ZOM_SPRITE_ATTK)):
+		ZOM_ATTK_DISPLIST.append(createTexDList(ZOM_SPRITE_ATTK[i], ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT))
 			
 	HERO_IDLE_DISPLIST = []
 	for i in xrange(0, len(HERO_SPRITE_IDLE)):
@@ -146,6 +182,21 @@ def initDispLists():
 			
 	CURS_DISPLIST = []
 	CURS_DISPLIST.append(createTexDList(CURS_SPRITE_MAIN, CURS_SPRITE_WIDTH, CURS_SPRITE_HEIGHT))
+	
+	BULLET_DISPLIST = []
+	
+	dlist = glGenLists(1)
+	glNewList(dlist, GL_COMPILE)
+	
+	glBegin(GL_POINT)
+	glColor3f(0.0,1.0,1.0)
+	glVertex2f(0.0,0.0)
+	glColor3f(1.0,1.0,1.0)
+	glEnd()
+	
+	glEndList()
+	
+	BULLET_DISPLIST.append(dlist)
 	
 def loadTextures():
 	#TERRAIN
@@ -167,12 +218,18 @@ def loadTextures():
 	global ZOM_SPRITE_MAIN
 	global ZOM_SPRITE_IDLE
 	global ZOM_SPRITE_WALK
+	global ZOM_SPRITE_DAMG
+	global ZOM_SPRITE_ATTK
+	global ZOM_SPRITE_DEAD
 	global ZOM_FOV
 
 	#ZOMBIE SPRITES
 	ZOM_SPRITE_MAIN = pygame.image.load(os.path.join(SPRITE_DIR,"zombie_1.png")).convert_alpha()
-	ZOM_SPRITE_IDLE = load_sprite_matrix(ZOM_SPRITE_MAIN, 0, 3, 5, 5, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
-	ZOM_SPRITE_WALK = load_sprite_matrix(ZOM_SPRITE_MAIN, 4, 11, 5, 5, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
+	ZOM_SPRITE_IDLE = load_sprite_matrix(ZOM_SPRITE_MAIN, 0, 4, 5, 6, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
+	ZOM_SPRITE_WALK = load_sprite_matrix(ZOM_SPRITE_MAIN, 4, 12, 5, 6, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
+	ZOM_SPRITE_DAMG = load_sprite_matrix(ZOM_SPRITE_MAIN, 16, 20, 5, 6, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
+	ZOM_SPRITE_DEAD = load_sprite_matrix(ZOM_SPRITE_MAIN, 28, 36, 5, 6, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
+	ZOM_SPRITE_ATTK = load_sprite_matrix(ZOM_SPRITE_MAIN, 12, 16, 5, 6, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
 
 	#ZOMBIE FOV
 	#TODO: when no longer necessary for debugging, don't store the images, only store the (preferably trimmed) masks and their dimensions
@@ -194,11 +251,10 @@ def loadTextures():
 
 	#HERO SPRITES
 	HERO_SPRITE_MAIN = pygame.transform.rotate(pygame.image.load(os.path.join(SPRITE_DIR,"A_big_13.png")).convert_alpha(), 90)
-	HERO_SPRITE_IDLE = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 0, 0, 0, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT) #0,0,0,7
-	HERO_SPRITE_WALK = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 0, 0, 0, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT) #0,3,0,7
+	HERO_SPRITE_IDLE = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 1, 0, 1, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT) #0,0,0,7
+	HERO_SPRITE_WALK = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 1, 0, 1, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT) #0,3,0,7
 	
 	HERO_MASK = pygame.mask.from_surface(HERO_SPRITE_MAIN.subsurface(0, 0, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT))
-
 	
 	#MISC
 	global CURS_SPRITE_MAIN

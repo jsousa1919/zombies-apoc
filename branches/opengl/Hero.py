@@ -16,6 +16,9 @@ DOWNRIGHT = 5
 DOWN = 6
 DOWNLEFT = 7
 
+#Shooting & Bullet Trails
+MAX_ZOMBIES_HIT = 4
+
 #Constants
 SQRT_2 = math.sqrt(2)
 
@@ -23,10 +26,15 @@ class Hero:
 	def __init__(self):
 		self.MOVE = False
 		self.RUN = False
+		self.SHOOT = False
 		self.speed = WALKSPEED
 
 		self.frame = 0
 		self.direction = 2
+		
+		self.shoot_tick = 0
+		self.shoot_ang = 0
+		self.TRAIL_LENGTH = 0
 
 		self.posx, self.posy = Util.WINDOW_WIDTH/2, Util.WINDOW_HEIGHT/2
 		self.angle = 0
@@ -40,14 +48,30 @@ class Hero:
 			return Util.HERO_IDLE_DISPLIST[self.frame]
 			
 	def draw(self):
+		if self.SHOOT:
+			tmp = self.shoot_tick - 8
+			if tmp < 1: tmp = 1
+			
+			glLoadIdentity()
+			glTranslatef(self.posx, self.posy, 0)
+			for i in xrange(tmp, self.shoot_tick+1):
+				glTranslatef(5*i,0,0)
+				glCallList(Util.BULLET_DISPLIST[0])
+			glLoadIdentity()
+			glTranslatef(self.posx, self.posy, 0)
+			glRotatef(self.shoot_angle, 0,0,1)
+			
+			self.shoot_tick += 1
+			if (self.shoot_tick == self.TRAIL_LENGTH+1):
+				self.shoot_tick = 0
+				self.SHOOT = False
+		
 		glLoadIdentity()
 		
 		glTranslatef(self.posx, self.posy, 0)
 		glRotatef(self.angle, 0,0,1)
 		glTranslatef(-(Util.HERO_SPRITE_WIDTH / 2),-(Util.HERO_SPRITE_HEIGHT / 2), 0)
 		glCallList(self.getDisplayList())
-		
-		glLoadIdentity()
 		
 		#print self.posx
 		#print self.posy
@@ -57,12 +81,12 @@ class Hero:
 		
 		ang = math.degrees(math.atan2((Util.WINDOW_HEIGHT - pos[1] - self.posy),(pos[0] - self.posx)))
 		
-		self.set_angle(ang)
+		return ang
 		
 	def update(self):
 		self.frame += 1
 		
-		self.getMouseAngle()
+		self.set_angle(self.getMouseAngle())
 		
 		if self.MOVE:
 			if self.RUN:
@@ -113,3 +137,14 @@ class Hero:
 
 	def rotate(self, delta):
 		self.set_angle(self.angle + delta)
+		
+	def shoot(self):
+		if not self.SHOOT:
+			pos = pygame.mouse.get_pos()
+			ang = math.degrees(math.atan2((Util.WINDOW_HEIGHT - pos[1] - self.posy),(pos[0] - self.posx)))
+			self.shoot_ang = ang
+			self.TRAIL_LENGTH = math.dist((self.posx, self.posy),(pos[0], Util.WINDOW_HEIGHT - pos[1]))
+		
+			self.SHOOT = True
+			
+		

@@ -7,16 +7,17 @@ hero = None
 zombies = []
 swarm = None
 curs = None
-FPS = 30
-ZOMBS = 50
+ZOMBS = 25
 
 def draw():
 	glLoadIdentity()
 	
 	glCallList(Util.BG_DISPLIST)
-	hero.draw()
+	
 	for zombie in zombies:
 		zombie.draw()
+		
+	hero.draw()
 		
 	curs.draw()
 	
@@ -50,10 +51,6 @@ def handleKeys():
 		
 	if keyspressed[K_LSHIFT]: hero.run()
 	else: hero.unrun()
-	
-	if keyspressed[K_SPACE]: 
-		global zombies
-		zombies.append(Zombie.Zombie(hero, swarm))
 	
 	return 1
 	
@@ -97,7 +94,7 @@ def main():
 	
 	quit = False
 	while not quit:
-		clock.tick(FPS)
+		clock.tick(Util.FPS)
 		
 		update()
 		draw()
@@ -109,7 +106,6 @@ def main():
 	
 		if event.type == QUIT: 
 			quit = True
-		
 		elif event.type == KEYDOWN and event.key == K_LSHIFT:
 			hero.run()
 		elif event.type == KEYUP and event.key == K_LSHIFT:
