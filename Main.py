@@ -1,22 +1,27 @@
-import pygame, os, Util, Hero, Zombie
+import pygame, os, Util, Hero, Zombie, Swarm
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
 
 hero = None
-zombie = None
+zombies = []
+swarm = None
 FPS = 30
+ZOMBS = 10
 
 def draw():
 	glLoadIdentity()
 	
 	glCallList(Util.BG_DISPLIST)
 	hero.draw()
-	zombie.draw()
+	for zombie in zombies:
+		zombie.draw()
 	
 	pygame.display.flip()
+
 	
 def handleKeys():
+	global zombies
 	keyspressed = pygame.key.get_pressed()
 	
 	if keyspressed[K_ESCAPE]:
@@ -38,6 +43,8 @@ def handleKeys():
 		hero.move(Hero.RIGHT)
 	elif keyspressed[K_w]:
 		hero.move(Hero.UP)
+	elif keyspressed[K_SPACE]:
+		zombies.append(Zombie.Zombie(hero, swarm))
 	else:
 		hero.stop()
 		
@@ -46,19 +53,33 @@ def handleKeys():
 	
 	return 1
 	
-def initPlayer():
+def initPlayers():
 	global hero
-	global zombie
 	hero = Hero.Hero()
-	zombie = Zombie.Zombie(hero)
+
+def initZombies(x):
+	global zombies
+	global swarm
+	swarm = Swarm.Swarm((Util.WINDOW_WIDTH, Util.WINDOW_HEIGHT))
+	for i in range(0, x):
+		zombies.append(Zombie.Zombie(hero, swarm))
+	
 	
 def update():
+	global swarm
 	hero.update()
-	zombie.update()
+	for zombie in zombies:
+		zombie.update()
+	for zombie in zombies:
+		zombie.try_swarm()
+	swarm.clear()
+	for zombie in zombies:
+		zombie.prop_swarm()
 	
 def main():
 	Util.init()
-	initPlayer()
+	initPlayers()
+	initZombies(ZOMBS)
 
 	frames = 0
 	pygame.event.set_allowed([QUIT])
