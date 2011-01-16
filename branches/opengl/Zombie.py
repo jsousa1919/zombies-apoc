@@ -64,8 +64,8 @@ class Zombie():
 		glTranslatef(-(Util.ZOM_SPRITE_WIDTH / 2), -(Util.ZOM_SPRITE_HEIGHT / 2), 0)
 		glCallList(self.getDisplayList())
 		
-		print self.posx
-		print self.posy
+		#print self.posx
+		#print self.posy
 
 #update
 	def update(self):
@@ -198,7 +198,7 @@ class Zombie():
 	def try_swarm(self):
 		if self.state != ST_ATTACKING and not (self.swarming and self.tick % 5 > 0):
 			num, to = self.swarm.swarm_movement(self)
-			if num != 0 and random.randrange(0, 2 * self.focus) < num:
+			if num != 0 and random.randrange(0, 5 * self.focus) < num:
 				#print "swarm to", loc
 				self.lkl = to
 				self.lt = self.tick

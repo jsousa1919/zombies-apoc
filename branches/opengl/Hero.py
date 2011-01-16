@@ -49,8 +49,8 @@ class Hero:
 		
 		glLoadIdentity()
 		
-		print self.posx
-		print self.posy
+		#print self.posx
+		#print self.posy
 		
 	def getMouseAngle(self):
 		pos = pygame.mouse.get_pos()
