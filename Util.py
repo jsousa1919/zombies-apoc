@@ -26,6 +26,7 @@ ZOM_IDLE_DISPLIST = None
 ZOM_WALK_DISPLIST = None
 
 ZOM_FOV = [[], []]
+ZOM_FOV_MASK = [[], []]
 ZOM_FOV_DEV = 4
 ZOM_FOV_MIN = 200
 
@@ -57,9 +58,13 @@ def request_fov(x):
 		return
 	while len(ZOM_FOV) <= x:
 		ZOM_FOV.append([])
+		ZOM_FOV_MASK.append([])
 	
 	for i in range(0, 360 / ZOM_FOV_DEV):
-		ZOM_FOV[x].append(pygame.transform.scale(ZOM_FOV[1][i], (2 * ZOM_FOV_MIN * x, 2 * ZOM_FOV_MIN * x)))
+		scaled = pygame.transform.scale(ZOM_FOV[1][i], (2 * ZOM_FOV_MIN * x, 2 * ZOM_FOV_MIN * x))
+		scaled.set_colorkey(pygame.Color('black'))
+		ZOM_FOV[x].append(scaled)
+		ZOM_FOV_MASK[x].append(pygame.mask.from_surface(scaled))
 
 def createTexDList(texture, w, h):
 	dlist = glGenLists(1)
@@ -175,9 +180,13 @@ def loadTextures():
 	#ZOMBIE FOV
 	#TODO: when no longer necessary for debugging, don't store the images, only store the (preferably trimmed) masks and their dimensions
 	ZOM_FOV[1].append(pygame.Surface((400,400)))
-	pygame.draw.polygon(ZOM_FOV[1][0], pygame.Color('0xFF000040'), [(ZOM_FOV_MIN, ZOM_FOV_MIN), (2*ZOM_FOV_MIN, 0), (2*ZOM_FOV_MIN, 2*ZOM_FOV_MIN)])
+	pygame.draw.polygon(ZOM_FOV[1][0], pygame.Color('0xFF000040'), [(int(ZOM_FOV_MIN * 7/8), ZOM_FOV_MIN), (2*ZOM_FOV_MIN, 0), (2*ZOM_FOV_MIN, 2*ZOM_FOV_MIN)])
+	ZOM_FOV_MASK[1].append(pygame.mask.from_surface(ZOM_FOV[1][0]))
 	for i in range(1, 360 / ZOM_FOV_DEV):
-		ZOM_FOV[1].append(pygame.transform.rotate(ZOM_FOV[1][0], ZOM_FOV_DEV*i))
+		rotated = pygame.transform.rotate(ZOM_FOV[1][0], ZOM_FOV_DEV*i)
+		rotated.set_colorkey(pygame.Color('black'))
+		ZOM_FOV[1].append(rotated)
+		ZOM_FOV_MASK[1].append(pygame.mask.from_surface(rotated))
 
 
 	#HERO

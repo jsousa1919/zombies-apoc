@@ -7,7 +7,7 @@ hero = None
 zombies = []
 swarm = None
 FPS = 30
-ZOMBS = 10
+ZOMBS = 100
 
 def draw():
 	glLoadIdentity()

@@ -80,10 +80,9 @@ class Zombie():
 			self.frame += 1
 
 		#create field of view mask
-		fov_image = Util.ZOM_FOV[self.sight][int(self.angle / Util.ZOM_FOV_DEV)]
-		fov_image.set_colorkey(pygame.Color('black'))
-		fov_rect = fov_image.get_rect(center=(self.posx, -self.posy))
-		fov_mask = pygame.mask.from_surface(fov_image)
+		ang = int(self.angle / Util.ZOM_FOV_DEV)
+		fov_image = Util.ZOM_FOV[self.sight][ang]
+		fov_mask = Util.ZOM_FOV_MASK[self.sight][ang]
 
 		#interact with hero
 		if self.tick % 5 == 0:
@@ -226,9 +225,9 @@ class Zombie():
 			self.lkl = (x, y)
 
 	def try_swarm(self):
-		if self.state != ST_ATTACKING and not self.swarming:
+		if self.state != ST_ATTACKING and not (self.swarming and self.tick % 5 > 0):
 			num, to = self.swarm.swarm_movement(self)
-			if random.randrange(0, 2 * self.focus) < num:
+			if num != 0 and random.randrange(0, 2 * self.focus) < num:
 				#print "swarm to", loc
 				self.lkl = to
 				self.lt = self.tick
