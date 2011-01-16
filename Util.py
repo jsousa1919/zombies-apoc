@@ -44,13 +44,13 @@ HERO_MASK = None
 CURS_SPRITE_WIDTH = 64
 CURS_SPRITE_HEIGHT = 64
 CURS_SPRITE_MAIN = None
+CURS_DISPLIST = None
 
 def load_sprite_matrix(main, xmin, xmax, ymin, ymax, w, h):
 	sprites = []
 	for i in xrange(ymin, ymax+1):
-		sprites.append([])
 		for j in xrange(xmin, xmax+1):
-			sprites[i].append(toTexture(main.subsurface(j*w, i*h, w, h), w, h))
+			sprites.append(toTexture(main.subsurface(j*w, i*h, w, h), w, h))
 	return sprites
 
 def request_fov(x):
@@ -88,9 +88,8 @@ def createTexDList(texture, w, h):
 	return dlist
 	
 def delDList(dlist):
-	for i in xrange(0, len(dlist)):
-		for j in xrange(0, len(dlist[0])):
-			glDeleteLists(dlist[i][j],1)
+	for j in xrange(0, len(dlist)):
+		glDeleteLists(dlist[j],1)
 
 def toTexture(surface, w, h):
 	#w, h MUST BE powers of 2 to work with OpenGL (e.g. 16x16, 256x512)
@@ -120,35 +119,33 @@ def cleanUp():
 	delDList(ZOM_IDLE_DISPLIST)
 	delDList(ZOM_WALK_DISPLIST)
 	
+	delDList(CURS_DISPLIST)
+	
 def initDispLists():
 	global ZOM_IDLE_DISPLIST
 	global ZOM_WALK_DISPLIST
 	global HERO_IDLE_DISPLIST
 	global HERO_WALK_DISPLIST
+	global CURS_DISPLIST
 	
 	ZOM_IDLE_DISPLIST = []
 	for i in xrange(0, len(ZOM_SPRITE_IDLE)):
-		ZOM_IDLE_DISPLIST.append([])
-		for j in xrange(0,len(ZOM_SPRITE_IDLE[0])):
-			ZOM_IDLE_DISPLIST[i].append(createTexDList(ZOM_SPRITE_IDLE[i][j], ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT))
+		ZOM_IDLE_DISPLIST.append(createTexDList(ZOM_SPRITE_IDLE[i], ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT))
 	
 	ZOM_WALK_DISPLIST = []
 	for i in xrange(0, len(ZOM_SPRITE_WALK)):
-		ZOM_WALK_DISPLIST.append([])
-		for j in xrange(0,len(ZOM_SPRITE_WALK[0])):
-			ZOM_WALK_DISPLIST[i].append(createTexDList(ZOM_SPRITE_WALK[i][j], ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT))
+		ZOM_WALK_DISPLIST.append(createTexDList(ZOM_SPRITE_WALK[i], ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT))
 			
 	HERO_IDLE_DISPLIST = []
 	for i in xrange(0, len(HERO_SPRITE_IDLE)):
-		HERO_IDLE_DISPLIST.append([])
-		for j in xrange(0,len(HERO_SPRITE_IDLE[0])):
-			HERO_IDLE_DISPLIST[i].append(createTexDList(HERO_SPRITE_IDLE[i][j], HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT))
+		HERO_IDLE_DISPLIST.append(createTexDList(HERO_SPRITE_IDLE[i], HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT))
 			
 	HERO_WALK_DISPLIST = []
 	for i in xrange(0, len(HERO_SPRITE_WALK)):
-		HERO_WALK_DISPLIST.append([])
-		for j in xrange(0,len(HERO_SPRITE_WALK[0])):
-			HERO_WALK_DISPLIST[i].append(createTexDList(HERO_SPRITE_WALK[i][j], HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT))
+		HERO_WALK_DISPLIST.append(createTexDList(HERO_SPRITE_WALK[i], HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT))
+			
+	CURS_DISPLIST = []
+	CURS_DISPLIST.append(createTexDList(CURS_SPRITE_MAIN, CURS_SPRITE_WIDTH, CURS_SPRITE_HEIGHT))
 	
 def loadTextures():
 	#TERRAIN
@@ -174,8 +171,8 @@ def loadTextures():
 
 	#ZOMBIE SPRITES
 	ZOM_SPRITE_MAIN = pygame.image.load(os.path.join(SPRITE_DIR,"zombie_1.png")).convert_alpha()
-	ZOM_SPRITE_IDLE = load_sprite_matrix(ZOM_SPRITE_MAIN, 0, 3, 0, 7, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
-	ZOM_SPRITE_WALK = load_sprite_matrix(ZOM_SPRITE_MAIN, 4, 11, 0, 7, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
+	ZOM_SPRITE_IDLE = load_sprite_matrix(ZOM_SPRITE_MAIN, 0, 3, 5, 5, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
+	ZOM_SPRITE_WALK = load_sprite_matrix(ZOM_SPRITE_MAIN, 4, 11, 5, 5, ZOM_SPRITE_WIDTH, ZOM_SPRITE_HEIGHT)
 
 	#ZOMBIE FOV
 	#TODO: when no longer necessary for debugging, don't store the images, only store the (preferably trimmed) masks and their dimensions
@@ -196,19 +193,16 @@ def loadTextures():
 	global HERO_MASK
 
 	#HERO SPRITES
-	HERO_SPRITE_MAIN = pygame.image.load(os.path.join(SPRITE_DIR,"male_unarmored.png")).convert_alpha()
-	HERO_SPRITE_IDLE = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 0, 0, 7, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT)
-	HERO_SPRITE_WALK = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 3, 0, 7, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT)
+	HERO_SPRITE_MAIN = pygame.transform.rotate(pygame.image.load(os.path.join(SPRITE_DIR,"A_small_2.png")).convert_alpha(), 90)
+	HERO_SPRITE_IDLE = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 0, 0, 0, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT) #0,0,0,7
+	HERO_SPRITE_WALK = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 0, 0, 0, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT) #0,3,0,7
 	
 	HERO_MASK = pygame.mask.from_surface(HERO_SPRITE_MAIN.subsurface(0, 0, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT))
 
 	
 	#MISC
 	global CURS_SPRITE_MAIN
-
-	pygame.mouse.set_visible(False)
-
-	CURS_SPRITE_MAIN = pygame.image.load(os.path.join(SPRITE_DIR,"crosshairs/crosshair6.png")).convert_alpha()
+	CURS_SPRITE_MAIN = toTexture(pygame.image.load(os.path.join(SPRITE_DIR,"crosshairs/crosshair6.png")).convert_alpha(), CURS_SPRITE_WIDTH, CURS_SPRITE_HEIGHT)
 	
 	#Create OpenGL display lists for textures
 	initDispLists()
@@ -221,12 +215,14 @@ def initDisplay():
 	flags = pygame.OPENGL | pygame.DOUBLEBUF
 	SCREEN = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT), flags)
 	
+	glDisable(GL_DEPTH_TEST)
+	
 	glClearColor(0.0,0.0,0.0,1.0)
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+	glClear(GL_COLOR_BUFFER_BIT)
 
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
-	gluOrtho2D(0,WINDOW_WIDTH,0,WINDOW_HEIGHT) #2D Orthographic: Origin (0,0) at bottomleft
+	gluOrtho2D(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT, 0, 1) #2D Orthographic: Origin (0,0) at bottomleft
 	glMatrixMode(GL_MODELVIEW)
 	
 	#Enable & setup texturing
@@ -236,6 +232,7 @@ def initDisplay():
 	
 def init():
 	pygame.init()
+	pygame.mouse.set_visible(False)
 	
 	#random.seed()
 	

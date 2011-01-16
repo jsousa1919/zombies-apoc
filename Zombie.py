@@ -17,16 +17,6 @@ ST_IDLE = 0
 ST_SEARCHING = 1
 ST_ATTACKING = 2
 
-#Sprite Direction Indices
-LEFT = 1
-UPLEFT = 2
-UP = 3
-UPRIGHT = 4
-RIGHT = 5
-DOWNRIGHT = 6
-DOWN = 7
-DOWNLEFT = 0
-
 class Zombie():
 #init
 	def __init__(self, player, swarm):
@@ -46,9 +36,9 @@ class Zombie():
 		self.speaking = False
 		self.MOVE = False
 		self.frame = 0
-		self.angle = random.randrange(0,8)
+		self.angle = random.randrange(0,360)
 		self.tick = 0
-		self.direction = 0
+		
 		self.speed_mod = random.randrange(0, MINSPEED)
 		self.set_speed(MINSPEED)
 
@@ -62,14 +52,20 @@ class Zombie():
 		
 	def getDisplayList(self):
 		if self.MOVE:
-			return Util.ZOM_WALK_DISPLIST[self.direction][self.frame]
+			return Util.ZOM_WALK_DISPLIST[self.frame]
 		else:
-			return Util.ZOM_IDLE_DISPLIST[self.direction][self.frame]
+			return Util.ZOM_IDLE_DISPLIST[self.frame]
 			
 	def draw(self):
 		glLoadIdentity()
-		glTranslatef(self.posx - (Util.ZOM_SPRITE_WIDTH / 2), self.posy - (Util.ZOM_SPRITE_HEIGHT / 2), 0)
+		
+		glTranslatef(self.posx, self.posy, 0)
+		glRotatef(self.angle, 0,0,1)
+		glTranslatef(-(Util.ZOM_SPRITE_WIDTH / 2), -(Util.ZOM_SPRITE_HEIGHT / 2), 0)
 		glCallList(self.getDisplayList())
+		
+		print self.posx
+		print self.posy
 
 #update
 	def update(self):
@@ -123,7 +119,7 @@ class Zombie():
 		self.goto_lkl()
 		
 		if self.MOVE:
-			if self.frame >= len(Util.ZOM_SPRITE_WALK[self.direction]): self.frame = 0
+			if self.frame >= len(Util.ZOM_SPRITE_WALK): self.frame = 0
 
 			x = self.speed*math.cos(math.radians(self.angle))
 			y = self.speed*math.sin(math.radians(self.angle))
@@ -132,7 +128,7 @@ class Zombie():
 
 		else:
 			self.end_swarm(None)
-			if self.frame >= len(Util.ZOM_SPRITE_IDLE[self.direction]): self.frame = 0
+			if self.frame >= len(Util.ZOM_SPRITE_IDLE): self.frame = 0
 	
 #actions
 	def speak(self):
@@ -157,12 +153,6 @@ class Zombie():
 			t = timer.ttimer(0.5, 1, self.endspeak, channel)
 			t.Start()
 		
-
-	def face(self, dirindex):
-		if self.direction != dirindex: 
-			#self.speak()
-			self.direction = dirindex
-		
 #movement
 	def move(self):
 		self.MOVE = True
@@ -175,23 +165,6 @@ class Zombie():
 	def set_angle(self, theta):
 		ang = int(theta % 360)
 		self.angle = ang
-
-		if ang >= 338 or ang < 23:
-			self.face(RIGHT)
-		elif 23 <= ang < 68:
-			self.face(UPRIGHT)
-		elif 68 <= ang < 113:
-			self.face(UP)
-		elif 113 <= ang < 158:
-			self.face(UPLEFT)
-		elif 158 <= ang < 203:
-			self.face(LEFT)
-		elif 203 <= ang < 248:
-			self.face(DOWNLEFT)
-		elif 248 <= ang < 293:
-			self.face(DOWN)
-		else:
-			self.face(DOWNRIGHT)
 
 	def rotate(self, delta):
 		self.set_angle(self.angle + delta)
@@ -213,8 +186,6 @@ class Zombie():
 			self.rotate(ldiff / 5)
 		else:
 			self.rotate(-rdiff / 5)
-		
-
 		
 		if dist <= nogo:
 			self.stop()

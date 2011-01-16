@@ -25,8 +25,8 @@ class Hero:
 		self.RUN = False
 		self.speed = WALKSPEED
 
-		self.direction = 0
 		self.frame = 0
+		self.direction = 2
 
 		self.posx, self.posy = Util.WINDOW_WIDTH/2, Util.WINDOW_HEIGHT/2
 		self.angle = 0
@@ -35,17 +35,34 @@ class Hero:
 	
 	def getDisplayList(self):
 		if self.MOVE:
-			return Util.HERO_WALK_DISPLIST[self.direction][self.frame]
+			return Util.HERO_WALK_DISPLIST[self.frame]
 		else:
-			return Util.HERO_IDLE_DISPLIST[self.direction][self.frame]
+			return Util.HERO_IDLE_DISPLIST[self.frame]
 			
 	def draw(self):
 		glLoadIdentity()
-		glTranslatef(self.posx - (Util.HERO_SPRITE_WIDTH / 2), self.posy - (Util.HERO_SPRITE_HEIGHT / 2), 0)
+		
+		glTranslatef(self.posx, self.posy, 0)
+		glRotatef(self.angle, 0,0,1)
+		glTranslatef(-(Util.HERO_SPRITE_WIDTH / 2),-(Util.HERO_SPRITE_HEIGHT / 2), 0)
 		glCallList(self.getDisplayList())
+		
+		glLoadIdentity()
+		
+		print self.posx
+		print self.posy
+		
+	def getMouseAngle(self):
+		pos = pygame.mouse.get_pos()
+		
+		ang = math.degrees(math.atan2((Util.WINDOW_HEIGHT - pos[1] - self.posy),(pos[0] - self.posx)))
+		
+		self.set_angle(ang)
 		
 	def update(self):
 		self.frame += 1
+		
+		self.getMouseAngle()
 		
 		if self.MOVE:
 			if self.RUN:
@@ -74,19 +91,18 @@ class Hero:
 				self.posy -= spd/SQRT_2
 				self.posx -= spd/SQRT_2
 			
-			if self.frame >= len(Util.HERO_WALK_DISPLIST[self.direction]): self.frame = 0
+			if self.frame >= len(Util.HERO_WALK_DISPLIST): self.frame = 0
 		else:
-			if self.frame >= len(Util.HERO_IDLE_DISPLIST[self.direction]): self.frame = 0
-
-	def face(self, dirindex):
-		if self.direction != dirindex:
-			self.direction = dirindex
+			if self.frame >= len(Util.HERO_IDLE_DISPLIST): self.frame = 0
+				
 	
-	def move(self, dirindex):
-		self.face(dirindex)
+	def face(self, dirind):
+		self.direction = dirind
+	
+	def move(self, dirind): 
+		self.face(dirind)
 		self.MOVE = True
-	def stop(self):
-		self.MOVE = False
+	def stop(self): self.MOVE = False
 
 	def run(self): self.RUN = True
 	def unrun(self): self.RUN = False
@@ -94,23 +110,6 @@ class Hero:
 	def set_angle(self, theta):
 		ang = int(theta % 360)
 		self.angle = ang
-
-		if ang >= 338 or ang < 23:
-			self.face(RIGHT)
-		elif 23 <= ang < 68:
-			self.face(UPRIGHT)
-		elif 68 <= ang < 113:
-			self.face(UP)
-		elif 113 <= ang < 158:
-			self.face(UPLEFT)
-		elif 158 <= ang < 203:
-			self.face(LEFT)
-		elif 203 <= ang < 248:
-			self.face(DOWNLEFT)
-		elif 248 <= ang < 293:
-			self.face(DOWN)
-		else:
-			self.face(DOWNRIGHT)
 
 	def rotate(self, delta):
 		self.set_angle(self.angle + delta)
