@@ -1,4 +1,4 @@
-import pygame, os, Util, Hero, Zombie, Swarm
+import pygame, os, Util, Hero, Zombie, Swarm, math, Cursor
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
@@ -6,8 +6,9 @@ from pygame.locals import *
 hero = None
 zombies = []
 swarm = None
+curs = None
 FPS = 30
-ZOMBS = 100
+ZOMBS = 10
 
 def draw():
 	glLoadIdentity()
@@ -16,12 +17,13 @@ def draw():
 	hero.draw()
 	for zombie in zombies:
 		zombie.draw()
+		
+	curs.draw()
 	
 	pygame.display.flip()
 
 	
 def handleKeys():
-	global zombies
 	keyspressed = pygame.key.get_pressed()
 	
 	if keyspressed[K_ESCAPE]:
@@ -43,13 +45,15 @@ def handleKeys():
 		hero.move(Hero.RIGHT)
 	elif keyspressed[K_w]:
 		hero.move(Hero.UP)
-	elif keyspressed[K_SPACE]:
-		zombies.append(Zombie.Zombie(hero, swarm))
 	else:
 		hero.stop()
 		
 	if keyspressed[K_LSHIFT]: hero.run()
 	else: hero.unrun()
+	
+	if keyspressed[K_SPACE]: 
+		global zombies
+		zombies.append(Zombie.Zombie(hero, swarm))
 	
 	return 1
 	
@@ -64,9 +68,9 @@ def initZombies(x):
 	for i in range(0, x):
 		zombies.append(Zombie.Zombie(hero, swarm))
 	
-	
 def update():
 	global swarm
+	curs.update()
 	hero.update()
 	for zombie in zombies:
 		zombie.update()
@@ -76,10 +80,16 @@ def update():
 	for zombie in zombies:
 		zombie.prop_swarm()
 	
-def main():
-	Util.init()
+def initEnvironment():
+	global curs
+	
 	initPlayers()
 	initZombies(ZOMBS)
+	curs = Cursor.Cursor()
+
+def main():
+	Util.init()
+	initEnvironment()
 
 	frames = 0
 	pygame.event.set_allowed([QUIT])
