@@ -41,7 +41,7 @@ class Hero:
 			
 	def draw(self):
 		glLoadIdentity()
-		glTranslatef(self.posx - Util.HERO_SPRITE_WIDTH, self.posy - Util.HERO_SPRITE_HEIGHT, 0)
+		glTranslatef(self.posx - (Util.HERO_SPRITE_WIDTH / 2), self.posy - (Util.HERO_SPRITE_HEIGHT / 2), 0)
 		glCallList(self.getDisplayList())
 		
 	def update(self):
