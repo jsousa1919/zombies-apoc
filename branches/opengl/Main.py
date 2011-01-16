@@ -1,4 +1,6 @@
-import pygame, os, Util, Hero, Zombie, Swarm, math, Cursor
+#!/usr/bin/env python
+
+import pygame, os, Util, Hero, Zombie, Swarm, math, Cursor, time
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
@@ -7,7 +9,8 @@ hero = None
 zombies = []
 swarm = None
 curs = None
-ZOMBS = 25
+FPS = 30
+ZOMBS = 100
 
 def draw():
 	glLoadIdentity()
@@ -52,6 +55,13 @@ def handleKeys():
 	if keyspressed[K_LSHIFT]: hero.run()
 	else: hero.unrun()
 	
+	if keyspressed[K_SPACE]: 
+		Util.SUPERSWARM = not Util.SUPERSWARM
+		print Util.SUPERSWARM
+		time.sleep(1)
+		#global zombies
+		#zombies.append(Zombie.Zombie(hero, swarm))
+	
 	return 1
 	
 def initPlayers():
@@ -67,13 +77,21 @@ def initZombies(x):
 	
 def update():
 	global swarm
+
 	curs.update()
 	hero.update()
+
+	zom_rects = map(lambda x: x.rect, zombies)
 	for zombie in zombies:
 		zombie.update()
+		il = zombie.rect.collidelistall(zom_rects)
+		for i in il:
+			zombie.collide(zombies[i])
+
 	for zombie in zombies:
 		zombie.try_swarm()
 	swarm.clear()
+	#print "============================"
 	for zombie in zombies:
 		zombie.prop_swarm()
 	
@@ -106,10 +124,6 @@ def main():
 	
 		if event.type == QUIT: 
 			quit = True
-		elif event.type == KEYDOWN and event.key == K_LSHIFT:
-			hero.run()
-		elif event.type == KEYUP and event.key == K_LSHIFT:
-			hero.unrun()
 
 	Util.cleanUp()
 	

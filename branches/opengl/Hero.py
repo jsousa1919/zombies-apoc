@@ -36,7 +36,7 @@ class Hero:
 		self.shoot_ang = 0
 		self.TRAIL_LENGTH = 0
 
-		self.posx, self.posy = Util.WINDOW_WIDTH/2, Util.WINDOW_HEIGHT/2
+		self.posx, self.posy = -500, -500 #Util.WINDOW_WIDTH/2, Util.WINDOW_HEIGHT/2
 		self.angle = 0
 
 		self.update()
