@@ -193,7 +193,7 @@ def loadTextures():
 	global HERO_MASK
 
 	#HERO SPRITES
-	HERO_SPRITE_MAIN = pygame.transform.rotate(pygame.image.load(os.path.join(SPRITE_DIR,"A_small_2.png")).convert_alpha(), 90)
+	HERO_SPRITE_MAIN = pygame.transform.rotate(pygame.image.load(os.path.join(SPRITE_DIR,"A_big_13.png")).convert_alpha(), 90)
 	HERO_SPRITE_IDLE = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 0, 0, 0, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT) #0,0,0,7
 	HERO_SPRITE_WALK = load_sprite_matrix(HERO_SPRITE_MAIN, 0, 0, 0, 0, HERO_SPRITE_WIDTH, HERO_SPRITE_HEIGHT) #0,3,0,7
 	
