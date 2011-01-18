@@ -17,13 +17,13 @@ class Swarm:
 
 	def clear(self):
 		# swarm analysis
-		print self.mask.count()
+		#print self.mask.count()
 		self.mask.clear()
 		self.sightings.clear()
 
 	def swarm_movement(self, zom):
 		loc = (zom.posx, zom.posy)
-		theta = zom.angle % 360
+		theta = int(zom.angle % 360)
 		sight = zom.sight
 
 		fov = Util.ZOM_FOV[sight][theta / Util.ZOM_FOV_DEV]

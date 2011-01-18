@@ -69,6 +69,8 @@ def load_sprite_matrix(main, xmin, xmax, ymin, ymax, w, h):
 	return sprites
 
 def request_fov(x):
+	global ZOM_FOV
+	global ZOM_FOV_MASK
 	if len(ZOM_FOV) > x > 0 and ZOM_FOV[x] != []:
 		return
 	while len(ZOM_FOV) <= x:
