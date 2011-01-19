@@ -42,7 +42,6 @@ class Zombie():
 
 		self.hero_focus = None
 		self.state = ST_IDLE
-		self.swarming = False
 		self.speaking = False
 		self.is_slow = False
 		self.moving = False
@@ -91,6 +90,7 @@ class Zombie():
 		if self.state == ST_DEAD and self.frame == len(UTIL.ZOM_DEAD_DISPLIST)-1:
 			return
 		self.tick += 1
+		#if self.state != 0: print self.state
 
 		#for hero in self.heroes:
 		self.test_fov(self.hero)
@@ -182,7 +182,9 @@ class Zombie():
 		self.moving = True
 
 	def stop(self):
-		self.swarming = False
+		self.end_swarm()
+		self.state = ST_IDLE
+		self.lkl = self.rect.center
 		self.moving = False
 
 	def set_center(self, x, y = None):
@@ -238,7 +240,7 @@ class Zombie():
 		
 
 #
-	def investigate(self, rmin = 50, rmax = 200):
+	def investigate(self, rmin = 50, rmax = 500):
 		x = random.randrange(rmin, rmax, 1)
 		if x % 2 == 0: x = -x
 		y = random.randrange(rmin, rmax, 1)
@@ -258,13 +260,15 @@ class Zombie():
 		ang = math.degrees(math.atan2(y - self.posy, x - self.posx))
 		self.set_angle(ang)
 		
+		#if self.moving: 
+		#	print self.dist
 		if self.dist <= nogo:
 			self.stop()
 		else:
 			self.go()
 
 	def try_swarm(self):
-		if self.state == ST_ATTACKING or (self.tick - self.last_swarm) < (20 * self.focus) or (self.state == ST_SWARMING and (self.tick % 5) > 0):
+		if self.state == ST_ATTACKING or (self.tick - self.last_swarm) < (10 * self.focus) or (self.state == ST_SWARMING and (self.tick % 5) > 0):
 			return
 		num, to = self.swarm.swarm_movement(self)
 		if num != 0 and random.randrange(0, 5 * self.focus) < num:
@@ -307,10 +311,8 @@ class Zombie():
 
 	def push(self, mag, ang):
 		ang %= 360
-		if abs(180 - (ang - self.angle)) > 150:
+		if self.state < ST_SWARMING and abs(180 - abs(ang - self.angle)) > 150 and random.randrange(0, MAXENDUR) > self.endurance:
 			self.stop()
-		else:
-			self.go()
 		x = mag*math.cos(math.radians(ang))
 		y = mag*math.sin(math.radians(ang))
 		self.add_center(x, y)
