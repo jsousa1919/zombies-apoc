@@ -1,4 +1,5 @@
 import pygame, math, operator, Util
+from OpenGL.GL import *
 
 class Swarm:
 	def __init__(self, size):
@@ -48,3 +49,14 @@ class Swarm:
 			x /= hit_count
 			y /= hit_count
 		return hit_count, (x,y)
+
+	def draw(self):
+		glLoadIdentity()
+		glColor3f(0, 1.0, 0.5)
+		glLineWidth(5)
+		glBegin(GL_LINES)
+		for loc, to in self.sightings.iteritems():
+			#print loc, " -> ", to
+			glVertex3f(loc[0], loc[1], 0)
+			glVertex3f(to[0], to[1], 0)
+		glEnd()

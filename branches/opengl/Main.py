@@ -10,10 +10,12 @@ zombies = []
 swarm = None
 curs = None
 FPS = 30
-ZOMBS = 4
+ZOMBS = 200
 
 def draw():
 	glLoadIdentity()
+	
+	glColor3f(1, 1, 1)
 	
 	glCallList(Util.BG_DISPLIST)
 	
@@ -23,6 +25,8 @@ def draw():
 	hero.draw()
 		
 	curs.draw()
+
+	swarm.draw()
 	
 	pygame.display.flip()
 
@@ -79,6 +83,7 @@ def update():
 
 	curs.update()
 	hero.update()
+	swarm.clear()
 
 	zom_rects = map(lambda x: x.rect, zombies)
 	for zombie in zombies:
@@ -88,11 +93,11 @@ def update():
 			zombie.collide(zombies[i])
 
 	for zombie in zombies:
-		zombie.try_swarm()
-	swarm.clear()
-	#print "============================"
-	for zombie in zombies:
 		zombie.prop_swarm()
+
+	for zombie in zombies:
+		zombie.try_swarm()
+	#print "============================"
 		
 	Util.BULLET_MASK.update()
 	
