@@ -1,4 +1,4 @@
-import pygame, sys, os, Zombie, math, Util
+import pygame, sys, os, Zombie, math, Util, Bullets
 from OpenGL.GL import *
 from pygame.locals import *
 
@@ -16,28 +16,23 @@ DOWNRIGHT = 5
 DOWN = 6
 DOWNLEFT = 7
 
-#Shooting & Bullet Trails
-MAX_ZOMBIES_HIT = 4
-
 #Constants
 SQRT_2 = math.sqrt(2)
 
 class Hero:
-	def __init__(self):
+	def __init__(self, ):
 		self.MOVE = False
 		self.RUN = False
 		self.SHOOT = False
 		self.speed = WALKSPEED
 
 		self.frame = 0
-		self.direction = 2
-		
-		self.shoot_tick = 0
-		self.shoot_ang = 0
-		self.TRAIL_LENGTH = 0
+		self.direction = 4
 
-		self.posx, self.posy = -500, -500 #Util.WINDOW_WIDTH/2, Util.WINDOW_HEIGHT/2
+		self.posx, self.posy = Util.WINDOW_WIDTH/2, Util.WINDOW_HEIGHT/2
 		self.angle = 0
+		self.shoot_angle = 0
+		self.shoot_tick = 1
 
 		self.update()
 	
@@ -49,37 +44,37 @@ class Hero:
 			
 	def draw(self):
 		if self.SHOOT:
-			tmp = self.shoot_tick - 8
-			if tmp < 1: tmp = 1
+			glLoadIdentity()
+			#glTranslatef(self.posx, self.posy, 0)
 			
-			glLoadIdentity()
-			glTranslatef(self.posx, self.posy, 0)
-			for i in xrange(tmp, self.shoot_tick+1):
-				glTranslatef(5*i,0,0)
-				glCallList(Util.BULLET_DISPLIST[0])
-			glLoadIdentity()
-			glTranslatef(self.posx, self.posy, 0)
-			glRotatef(self.shoot_angle, 0,0,1)
+			delx = (Bullets.BULLET_VELOCITY/Bullets.INCREMENTS)*math.cos(math.radians(self.shoot_angle))
+			dely = (Bullets.BULLET_VELOCITY/Bullets.INCREMENTS)*math.sin(math.radians(self.shoot_angle))
+			
+			#glTranslatef(self.shoot_tick*delx, self.shoot_tick*dely, 0)
+			#glCallList(Util.BULLET_DISPLIST[0])
+			
+			glBegin(GL_LINES)
+			glColor3f(1.0,0.0,0.0)
+			glVertex2f(self.posx, self.posy)
+			glVertex2f(self.posx + delx*Bullets.INCREMENTS, self.posy + dely*Bullets.INCREMENTS)
+			glColor3f(1.0,1.0,1.0)
+			glEnd()
 			
 			self.shoot_tick += 1
-			if (self.shoot_tick == self.TRAIL_LENGTH+1):
-				self.shoot_tick = 0
+			if self.shoot_tick > Bullets.INCREMENTS:
 				self.SHOOT = False
+				self.shoot_tick = 0
 		
 		glLoadIdentity()
-		
 		glTranslatef(self.posx, self.posy, 0)
 		glRotatef(self.angle, 0,0,1)
 		glTranslatef(-(Util.HERO_SPRITE_WIDTH / 2),-(Util.HERO_SPRITE_HEIGHT / 2), 0)
 		glCallList(self.getDisplayList())
 		
-		#print self.posx
-		#print self.posy
-		
 	def getMouseAngle(self):
 		pos = pygame.mouse.get_pos()
 		
-		ang = math.degrees(math.atan2((Util.WINDOW_HEIGHT - pos[1] - self.posy),(pos[0] - self.posx)))
+		ang = int(math.degrees(math.atan2((Util.WINDOW_HEIGHT - pos[1] - self.posy),(pos[0] - self.posx))))
 		
 		return ang
 		
@@ -118,6 +113,9 @@ class Hero:
 			if self.frame >= len(Util.HERO_WALK_DISPLIST): self.frame = 0
 		else:
 			if self.frame >= len(Util.HERO_IDLE_DISPLIST): self.frame = 0
+			
+		if not self.SHOOT and pygame.mouse.get_pressed()[0]:
+			self.shoot()
 				
 	
 	def face(self, dirind):
@@ -139,12 +137,6 @@ class Hero:
 		self.set_angle(self.angle + delta)
 		
 	def shoot(self):
-		if not self.SHOOT:
-			pos = pygame.mouse.get_pos()
-			ang = math.degrees(math.atan2((Util.WINDOW_HEIGHT - pos[1] - self.posy),(pos[0] - self.posx)))
-			self.shoot_ang = ang
-			self.TRAIL_LENGTH = math.dist((self.posx, self.posy),(pos[0], Util.WINDOW_HEIGHT - pos[1]))
-		
-			self.SHOOT = True
-			
-		
+		Util.BULLET_MASK.add(Bullets.Bullet(self, Bullets.DMG_NORMAL))
+		self.shoot_angle = self.angle
+		self.SHOOT = True

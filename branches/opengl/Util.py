@@ -1,4 +1,4 @@
-import pygame, os
+import pygame, os, Bullets
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -57,9 +57,10 @@ CURS_DISPLIST = None
 #TESTING STUFF / VARIABLES TO EVENTUALLY MOVE
 SUPERSWARM = True
 
-#BULLET TRACER
+#BULLETS
 BULLET_DISPLIST = None
-TRACER_COLOR = 0.0, 1.0, 1.0
+BULLET_SIZE = 15
+BULLET_MASK = Bullets.BulletMask()
 
 def load_sprite_matrix(main, xmin, xmax, ymin, ymax, w, h):
 	sprites = []
@@ -193,7 +194,7 @@ def initDispLists():
 	dlist = glGenLists(1)
 	glNewList(dlist, GL_COMPILE)
 	
-	glBegin(GL_POINT)
+	glBegin(GL_POINTS)
 	glColor3f(0.0,1.0,1.0)
 	glVertex2f(0.0,0.0)
 	glColor3f(1.0,1.0,1.0)
@@ -291,11 +292,12 @@ def initDisplay():
 	glEnable(GL_BLEND)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 	
+	glPointSize(BULLET_SIZE)
+	glLineWidth(BULLET_SIZE)
+	
 def init():
 	pygame.init()
 	pygame.mouse.set_visible(False)
-	
-	#random.seed()
 	
 	initDisplay()
 	loadTextures()
