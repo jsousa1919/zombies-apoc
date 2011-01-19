@@ -10,7 +10,7 @@ zombies = []
 swarm = None
 curs = None
 FPS = 30
-ZOMBS = 200
+ZOMBS = 4
 
 def draw():
 	glLoadIdentity()
@@ -76,7 +76,6 @@ def initZombies(x):
 		zombies.append(Zombie.Zombie(hero, swarm))
 	
 def update():
-	global swarm
 
 	curs.update()
 	hero.update()
@@ -94,6 +93,8 @@ def update():
 	#print "============================"
 	for zombie in zombies:
 		zombie.prop_swarm()
+		
+	Util.BULLET_MASK.update()
 	
 def initEnvironment():
 	global curs
